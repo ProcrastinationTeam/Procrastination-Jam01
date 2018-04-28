@@ -8,6 +8,7 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxAngle;
+import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
 import flixel.tweens.FlxEase;
@@ -26,36 +27,36 @@ using flixel.util.FlxSpriteUtil;
 
 class PlayState extends FlxState
 {
-	var railSprite 			: FlxSprite;
-	var islandSprite 		: FlxSprite;
+	public var railSprite 			: FlxSprite;
+	public var islandSprite 		: FlxSprite;
 	
-	var targetTest 			: FlxNapeSprite;
-	var projectileTest 		: FlxNapeSprite;
+	public var projectile	 		: Projectile;
 	
 	// TODO: juste un FlxSprite suffirait ?
-	var player 				: FlxSprite;
-	var playerDirection 	: Bool = false;
+	public var player 				: FlxSprite;
+	public var playerDirection 		: Bool 						= false;
 	
-	var elapsedTime 		: Float = 0;
-	var center 				: FlxPoint;
-	var radius 				: Float;
-	var playerRpmBase		: Float = 10;		// 1 = 1 turn/min, 2 = 2 turns/min
-	var playerRpmCurrent	: Float = 10;		// 1 = 1 turn/min, 2 = 2 turns/min
-	//var playerRpmChange		: Float = 0;
+	public var elapsedTime 			: Float 					= 0;
+	public var center 				: FlxPoint;
+	public var radius 				: Float;
+	public var playerRpmBase		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
+	public var playerRpmCurrent		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
 	
-	var debugCanvas 		: FlxSprite;
+	public var debugCanvas 			: FlxSprite;
 	
-	var rightVector 		: FlxVector;
+	public var rightVector 			: FlxVector;
 	
-	var targets 			: FlxTypedGroup<Target> = new FlxTypedGroup<Target>();
+	public var targets 				: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
 	
 	
-	public var CB_BULLET:CbType = new CbType();
+	public var CB_BULLET			: CbType 					= new CbType();
 	
 	
 	override public function create():Void
 	{
 		super.create();
+		
+		Reg.state = this;
 		
 		// Nape init
 		FlxNapeSpace.init();
@@ -79,8 +80,9 @@ class PlayState extends FlxState
 		
 		player = new FlxSprite(railSprite.x, railSprite.y + railSprite.height / 2, "assets/images/target.png");
 		
-		projectileTest = new FlxNapeSprite(500, 400,"assets/images/target2.png");
-		projectileTest.createCircularBody(16);
+		projectile = new Projectile(500, 400,"assets/images/target2.png");
+		var trail = new Trail(projectile).start(false, FlxG.elapsed);
+		add(trail);
 		
 		center = new FlxPoint(railSprite.x + railSprite.width / 2, railSprite.y + railSprite.height / 2);
 		radius = railSprite.width / 2;
@@ -99,15 +101,16 @@ class PlayState extends FlxState
 		add(railSprite);
 		add(islandSprite);
 		add(targets);
-		add(projectileTest);
+		add(projectile);
 		add(player);
 		add(debugCanvas);
 		
-		
-		
-		
-		
-		
+		FlxNapeSpace.space.listeners.add(new InteractionListener(
+			CbEvent.BEGIN, 
+			InteractionType.COLLISION, 
+			CB_BULLET,
+			CbType.ANY_BODY,
+			onBulletCollides));
 	}
 
 	override public function update(elapsed:Float):Void
@@ -115,42 +118,6 @@ class PlayState extends FlxState
 		super.update(elapsed);
 		
 		elapsedTime += elapsed;
-		
-		 // TEST 
-		 
-		 var xToGo = projectileTest.getGraphicMidpoint().x;
-		 var yToGo = projectileTest.getGraphicMidpoint().y;
-		 
-		//trace("yToGo : " + yToGo);
-		//trace("xToGo : " + xToGo);
-		
-		 
-		if (FlxG.keys.pressed.LEFT)
-		{
-			xToGo -= 1;
-			projectileTest.setPosition(xToGo, yToGo);
-		}
-		if (FlxG.keys.pressed.RIGHT)
-		{
-			xToGo += 1;
-			projectileTest.setPosition(xToGo, yToGo);
-		}
-		if (FlxG.keys.pressed.UP)
-		{
-			yToGo -= 1;
-
-			projectileTest.setPosition(xToGo, yToGo);
-		}
-		if (FlxG.keys.pressed.DOWN)
-		{
-			yToGo += 1;
-	
-			projectileTest.setPosition(xToGo, yToGo);
-		}
-		 //
-		 
-		 //trace("yToGo : " + yToGo);
-		 //trace("xToGo : " + xToGo);
 		
 		if (FlxG.keys.justPressed.SPACE) {
 			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
@@ -171,38 +138,49 @@ class PlayState extends FlxState
 			//playerRpmCurrent--;
 		//}
 		
-		FlxNapeSpace.space.listeners.add(new InteractionListener(
-			CbEvent.BEGIN, 
-			InteractionType.COLLISION, 
-			CB_BULLET,
-			CbType.ANY_BODY,
-			onBulletCollides));
-			
-		
-		if (FlxG.mouse.justPressed) {
-			var vectorPlayerToMouse:FlxVector = FlxVector.get(FlxG.mouse.x - (player.x - player.width / 2), FlxG.mouse.y - (player.y - player.height / 2)).normalize();
-			
-			var projectile = new FlxNapeSprite(player.x + player.width / 2, player.y + player.height / 2, "assets/images/target2.png");
-			projectile.createCircularBody(16);
-			projectile.body.velocity.setxy(vectorPlayerToMouse.x * 1000, vectorPlayerToMouse.y * 1000);
-			projectile.antialiasing = true;
-			projectile.body.cbTypes.add(CB_BULLET);
-			projectile.body.isBullet = true;
-			projectile.body.userData.parent = projectile;
-			// Clé de pas faire tout interagir avec tout ?
-			// En foutant un cbType CB_PLAYER sur le player et CB_TARGET sur les cibles, et en changeant au dessus le ANY_BODY, peut être
-			//projectile.body.setShapeFilters(new InteractionFilter(256, ~256));
-			add(projectile);
-			var trail = new Trail(projectile).start(false, FlxG.elapsed);
-			add(trail);
-			
-			vectorPlayerToMouse.put();
-		}
-		
-		
 		var instantRotation:Float = (playerDirection ? 1 : -1) * elapsed * 360 * playerRpmCurrent / 60;
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
+		
+		var vectorPlayerToMouse:FlxVector = FlxVector.get(FlxG.mouse.x - (player.x - player.width / 2), FlxG.mouse.y - (player.y - player.height / 2)).normalize();
+		var vectorProjectileToPlayer:FlxVector = FlxVector.get((player.x - player.width / 2) - projectile.x, (player.y - player.height / 2) - projectile.y).normalize();
+			
+		switch(projectile.state) {
+			case ON_PLAYER:
+				// CONTINUE GOING TO TARGET
+				projectile.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
+			case MOVING_TOWARDS_TARGET:
+				// DO NOTHING!
+			case MOVING_TOWARDS_PLAYER:
+				// FOLLOW PLAYER!
+				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * 1000, vectorProjectileToPlayer.y * 1000);
+				if (FlxMath.distanceBetween(projectile, player) < 30) {
+					projectile.state = ON_PLAYER;
+				}
+			case ON_TARGET:
+				// DO NOTHING!
+		}
+		
+		if (FlxG.mouse.justPressed) {
+			switch(projectile.state) {
+				case ON_PLAYER:
+					// GO !
+					projectile.state = MOVING_TOWARDS_TARGET;
+					projectile.body.velocity.setxy(vectorPlayerToMouse.x * 1000, vectorPlayerToMouse.y * 1000);
+				case MOVING_TOWARDS_TARGET:
+					// DO NOTHING!
+				case MOVING_TOWARDS_PLAYER:
+					// DO NOTHING!
+				case ON_TARGET:
+					// COME BACK !
+					projectile.state = MOVING_TOWARDS_PLAYER;
+					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * 1000, vectorProjectileToPlayer.y * 1000);
+			}
+			
+		}
+		
+		vectorPlayerToMouse.put();
+		vectorProjectileToPlayer.put();
 		
 		debugCanvas.fill(FlxColor.TRANSPARENT);
 		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
@@ -227,6 +205,8 @@ class PlayState extends FlxState
 		//trace(callback.int2.userData.parent);
 		//trace($type(callback.int2.cbTypes));
 		//trace($type(callback.int2.cbTypes));
+		projectile.body.velocity.setxy(0, 0);
+		projectile.state = ON_TARGET;
 	}
 	
 	//public targetSpawner(): Void {

@@ -23,6 +23,5 @@ class Target extends FlxNapeSprite
 		
 		initialRotation = InitialRotation;
 		body.rotation = FlxAngle.asRadians(initialRotation);
-		//angle = initialRotation;
 	}
 }
