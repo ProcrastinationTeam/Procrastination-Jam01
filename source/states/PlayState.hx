@@ -63,7 +63,7 @@ class PlayState extends FlxState
 		FlxNapeSpace.space.gravity.setxy(0, 0);
 		
 		// Level initialization
-		bgColor = FlxColor.WHITE;
+		bgColor = FlxColor.GRAY;
 		
 		railSprite = new FlxSprite();
 		railSprite.screenCenter();
@@ -91,7 +91,8 @@ class PlayState extends FlxState
 		rightVector = FlxVector.get(radius, 0);
 		
 		for (i in 0...10) {
-			var target = new Target(center.x + FlxG.random.float(-200, 200), center.y + FlxG.random.float(-200, 200), "assets/images/target.png", FlxG.random.int(0, 359));
+			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), "assets/images/target.png", FlxG.random.int(0, 359));
+			target.body.userData.parent = target;
 			targets.add(target);
 		}
 		
@@ -187,6 +188,7 @@ class PlayState extends FlxState
 			projectile.antialiasing = true;
 			projectile.body.cbTypes.add(CB_BULLET);
 			projectile.body.isBullet = true;
+			projectile.body.userData.parent = projectile;
 			// Clé de pas faire tout interagir avec tout ?
 			// En foutant un cbType CB_PLAYER sur le player et CB_TARGET sur les cibles, et en changeant au dessus le ANY_BODY, peut être
 			//projectile.body.setShapeFilters(new InteractionFilter(256, ~256));
@@ -219,8 +221,12 @@ class PlayState extends FlxState
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
-		var body = callback.int1.castBody;
-		trace(body);
+		//trace(callback.int1.userData.parent);
+		//trace(callback.int1.cbTypes);
+		
+		//trace(callback.int2.userData.parent);
+		//trace($type(callback.int2.cbTypes));
+		//trace($type(callback.int2.cbTypes));
 	}
 	
 	//public targetSpawner(): Void {
