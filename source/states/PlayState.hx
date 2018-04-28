@@ -8,8 +8,10 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxAngle;
+import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
+import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
@@ -48,6 +50,10 @@ class PlayState extends FlxState
 	var rightVector 		: FlxVector;
 	
 	var targets 			: FlxTypedGroup<Target> = new FlxTypedGroup<Target>();
+	
+	
+	//UI
+	var endText : FlxText;
 	
 	
 	public var CB_BULLET:CbType = new CbType();
@@ -91,7 +97,7 @@ class PlayState extends FlxState
 		rightVector = FlxVector.get(radius, 0);
 		
 		for (i in 0...10) {
-			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), "assets/images/target.png", FlxG.random.int(0, 359));
+			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), "assets/images/target.png", FlxG.random.int(0, 359), i, TargetType.FIXED );
 			target.body.userData.parent = target;
 			targets.add(target);
 		}
@@ -99,7 +105,7 @@ class PlayState extends FlxState
 		add(railSprite);
 		add(islandSprite);
 		add(targets);
-		add(projectileTest);
+		//add(projectileTest);
 		add(player);
 		add(debugCanvas);
 		
@@ -218,15 +224,49 @@ class PlayState extends FlxState
 			FlxG.resetState();
 		}
 		
+		if (targets.length == 0)
+		{
+			trace("You win");
+			var winText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
+			winText.setPosition(FlxG.width / 2 - (winText.width/2), FlxG.height / 2 - (winText.height/2));
+			add(winText);	
+		}
+		
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
-		//trace(callback.int1.userData.parent);
-		//trace(callback.int1.cbTypes);
+		trace(callback.int2.userData.id);
 		
-		//trace(callback.int2.userData.parent);
-		//trace($type(callback.int2.cbTypes));
-		//trace($type(callback.int2.cbTypes));
+		
+		
+		var body = callback.int1.castBody;
+		var body2 = callback.int2.castBody;
+		
+		//var initialVector : FlxVector = FlxVector.get(body.position.x, body.position.y);
+		
+		var initialRot = callback.int2.userData.parent.initialRotation;
+		trace("INIT : " + initialRot);
+		
+		var x2 = FlxMath.fastCos(0) - Math.sin(Std.parseInt(initialRot) * 1);
+		var y2 = Math.sin( 0) + FlxMath.fastCos(Std.parseInt(initialRot) * 1);
+		
+		
+		var centerProjectileP : FlxPoint = new FlxPoint(body.position.x, body.position.y);
+		var centerTargetP : FlxPoint = new FlxPoint(body2.position.x, body2.position.y);
+		
+		var vectorTarget =  new FlxVector(centerTargetP.x - centerProjectileP.x, centerTargetP.y - centerProjectileP.y);
+		var vectorInitial =  new FlxVector(x2,y2);
+		
+		var angle = FlxMath.dotProduct(vectorTarget.x, vectorTarget.y, vectorInitial.x, vectorInitial.y);
+		trace("ANGLE : " + angle);
+		
+		
+		
+		if (callback.int2.userData.type == TargetType.FIXED)
+		{
+			callback.int2.userData.parent.kill();
+			targets.remove(callback.int2.userData.parent, true);
+		}
 	}
 	
 	//public targetSpawner(): Void {
@@ -234,6 +274,8 @@ class PlayState extends FlxState
 	//}
 	
 }
+
+
 
 class Trail extends FlxEmitter
 {
