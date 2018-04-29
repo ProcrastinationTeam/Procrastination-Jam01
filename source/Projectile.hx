@@ -10,7 +10,8 @@ class Projectile extends FlxNapeSprite
 	
 	public function new(X:Float=0, Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) {
 		super(X, Y);
-		loadRotatedGraphic(SimpleGraphic, 360);
+		//loadRotatedGraphic(SimpleGraphic, 360);
+		loadRotatedGraphic("assets/images/disc.png", 360);
 		
 		createCircularBody(16);
 		body.allowMovement = true;
