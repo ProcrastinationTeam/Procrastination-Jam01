@@ -28,26 +28,16 @@ class Target extends FlxNapeSprite
 		createCircularBody(16);
 		body.allowMovement = false;
 		body.allowRotation = true;
-	
-	//	initialRotation = InitialRotation;
-		initialRotation = 0;
-		trace("INIT ID[" + _id + "] : " + initialRotation); 
+		
+		initialRotation = InitialRotation;
+		//trace("INIT ID[" + _id + "] : " + initialRotation); 
 		body.rotation = FlxAngle.asRadians(initialRotation);
-
+		
 		body.userData.id = _id;
 		body.userData.type = _type;
 		body.userData.angle = initialRotation;
 		
 		hitArea = new FlxSprite(X - 16, Y - 16, AssetsImages.hitarea__png);
-		hitArea.angle = initialRotation;
-		
-		//angle = initialRotation;
-
-	}
-	
-	override public function update(elapsed : Float)
-	{
-		super.update(elapsed);
-		//hitArea.angle += 1;
+		hitArea.angle = initialRotation + 180;
 	}
 }
