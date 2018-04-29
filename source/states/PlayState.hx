@@ -302,7 +302,7 @@ class PlayState extends FlxState
 		
 		
 		
-		
+
 		
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
