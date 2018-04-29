@@ -29,50 +29,50 @@ using flixel.util.FlxSpriteUtil;
 
 class PlayState extends FlxState
 {
+	//
 	public var background 					: FlxSprite;
 	public var railSprite 					: FlxSprite;
 	public var islandSprite 				: FlxSprite;
 	
-	public var projectile	 				: Projectile;
-	public var projectileSprite				: FlxSprite;
-	
-	public var projectileTrail				: Trail;
-	public var projectileSpriteTrail		: Trail;
-	
-	// TODO: juste un FlxSprite suffirait ?
+	//
 	public var player 						: Player;
 	public var playerCrosshair				: FlxSprite;
-	public var playerDirectionClockwise 	: Bool 						= true;
+	
+	public var projectile	 				: Projectile;
+	public var projectileTrail				: Trail;
+	
+	public var projectileSprite				: FlxSprite;
+	public var projectileSpriteTrail		: Trail;
+	
+	//
+	public var debugCanvas 					: FlxSprite;
+	public var useDebugControls 			: Bool						= false;
+	
+	//
+	public var elapsedTime 					: Float 					= 0;
 	public var gameEnd						: Bool						= false;
 	public var isGamePaused					: Bool						= false;
 	
-	public var elapsedTime 					: Float 					= 0;
+	//
+	public var rightVector 					: FlxVector;
 	public var center 						: FlxPoint;
 	public var radius 						: Float;
-	public var playerRpmBase				: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
-	public var playerRpmCurrent				: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
 	
-	public var debugCanvas 					: FlxSprite;
-	
-	public var rightVector 					: FlxVector;
-	
+	//
 	public var targets 						: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
 	public var targetsHitarea				: FlxSpriteGroup 			= new FlxSpriteGroup();
 
 	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
-	//UI
+	// UI
 	public var endText 						: FlxText;
 	public var pauseText 					: FlxText;
 	public var scoreText 					: FlxText;
 
+	//
 	public var CB_BULLET					: CbType 					= new CbType();
 	
-	public var useDebugControls 			: Bool						= false;
-	
-	
-	override public function create():Void
-	{
+	override public function create():Void {
 		super.create();
 		
 		Reg.state = this;
@@ -197,8 +197,7 @@ class PlayState extends FlxState
 		#end
 	}
 
-	override public function update(elapsed:Float):Void
-	{
+	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
 		
 		elapsedTime += elapsed;
@@ -213,23 +212,20 @@ class PlayState extends FlxState
 			projectileOutOfScreenCallback();
 		}
 		
-		if (FlxG.keys.justPressed.P)
-		{
-			isGamePaused = pauseGame(isGamePaused);
+		if (FlxG.keys.justPressed.P) {
+			pauseGame();
 		}
 		
 		#if debug
 		if (FlxG.keys.pressed.SHIFT) {
 			if (FlxG.keys.justPressed.T) {
 				useDebugControls = !useDebugControls;
+				player.rpm = Tweaking.playerRpmBase;
+				
 				if (useDebugControls) {
 					// On vient de passer en mode debug
-					playerRpmCurrent = playerRpmBase;
 				} else {
 					// On repasse en mode normal
-					player.speed = MEDIUM;
-					playerRpmCurrent = playerRpmBase;
-					playerDirectionClockwise = true;
 				}
 			}
 		}
@@ -245,7 +241,7 @@ class PlayState extends FlxState
 				//}});
 				
 				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
-					playerDirectionClockwise = !playerDirectionClockwise;
+					player.clockwise = !player.clockwise;
 					//playerRpmCurrent = playerRpmBase;
 					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
 				//}});
@@ -270,7 +266,7 @@ class PlayState extends FlxState
 				}
 			}
 				
-			instantRotation = (playerDirectionClockwise ? 1 : -1) * elapsed * 360 * playerRpmCurrent / 60;
+			instantRotation = (player.clockwise ? 1 : -1) * elapsed * 360 * player.rpm / 60;
 			switch(player.speed) {
 				case SLOW:
 					instantRotation *= 0.75;
@@ -282,24 +278,24 @@ class PlayState extends FlxState
 		} else {
 			// METHOD 2: debug
 			if (FlxG.keys.pressed.D) {
-				if (playerRpmCurrent < playerRpmBase) {
-					playerRpmCurrent++;
+				if (player.rpm < Tweaking.playerRpmBase) {
+					player.rpm++;
 				}
 			} else if (FlxG.keys.pressed.Q) {
-				if (playerRpmCurrent > -playerRpmBase) {
-					playerRpmCurrent--;
+				if (player.rpm > -Tweaking.playerRpmBase) {
+					player.rpm--;
 				}
 			} else {
-				if (Math.abs(playerRpmCurrent) < 0.3) {
-					playerRpmCurrent = 0;
-				} else if (playerRpmCurrent > 0) {
-					playerRpmCurrent -= elapsed * 100;
-				} else if (playerRpmCurrent < 0) {
-					playerRpmCurrent += elapsed * 100;
+				if (Math.abs(player.rpm) < 0.5) {
+					player.rpm = 0;
+				} else if (player.rpm > 0) {
+					player.rpm -= elapsed * 100;
+				} else if (player.rpm < 0) {
+					player.rpm += elapsed * 100;
 				}
 			}
 			
-			instantRotation = elapsed * 360 * playerRpmCurrent / 60;
+			instantRotation = elapsed * 360 * player.rpm / 60;
 		}
 		
 		
@@ -367,10 +363,13 @@ class PlayState extends FlxState
 		
 		vectorPlayerToMouse.put();
 		vectorProjectileToPlayer.put();
+		vectorProjectileSpriteToPlayer.put();
 		
+		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
 		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
 		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
+		#end
 		
 		//for (target in targets) {
 			//target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
@@ -381,49 +380,38 @@ class PlayState extends FlxState
 			////targeta.angle= FlxAngle.asRadians(instantRotation * 60);
 		//}
 		
-		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
-			FlxG.resetGame();
-		} else if (FlxG.keys.justPressed.R) {
-			FlxG.resetState();
-		}
-		
-		if (targets.length == 0 && !gameEnd)
-		{
+		if (targets.length == 0 && !gameEnd) {
 			trace("You win");
 			gameEnd = true;
 			endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
 			endText.setPosition(FlxG.width / 2 - (endText.width/2), FlxG.height / 2 - (endText.height/2));
 			add(endText);	
 			
-			var relaunchGameTimer = new FlxTimer();
-			relaunchGameTimer.start(3, loadNextState, 1);
-			
-			
-			
+			new FlxTimer().start(3, loadNextState, 1);
 		}
 		
+		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
+			FlxG.resetGame();
+		} else if (FlxG.keys.justPressed.R) {
+			FlxG.resetState();
+		}
 	}
 	
-	public function loadNextState(timer:FlxTimer) : Void
-	{
+	public function loadNextState(timer:FlxTimer):Void {
 		FlxG.resetState();
 	}
 	
-	public function pauseGame(isPause: Bool):Bool
-	{
+	public function pauseGame():Void {
+		isGamePaused = !isGamePaused;
 		
-		if (isPause)
-		{
-			FlxG.timeScale = 1;
-			pauseText.set_visible(false);
-		}
-		else
-		{
+		if (isGamePaused) {
 			FlxG.timeScale = 0;
-			pauseText.set_visible(true);
+			pauseText.visible = true;
 		}
-		isPause = !isPause;
-		return isPause;
+		else {
+			FlxG.timeScale = 1;
+			pauseText.visible = false;
+		}
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
@@ -481,12 +469,10 @@ class PlayState extends FlxState
 	public function projectileOutOfScreenCallback() {
 		projectile.state = OFF_SCREEN;
 		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
-			//projectile.state = ON_PLAYER;
 			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
 			projectileSprite.setPosition(projectile.x, projectile.y);
 		});
 	}
-	
 }
 
 
