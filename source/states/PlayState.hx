@@ -134,8 +134,12 @@ class PlayState extends FlxState
 			targetsHitarea.add(target.hitArea);
 		}
 		
+		var obstacle = new Obstacle(center.x + 100, center.y, ObsctaleType.ANGLE);
+		
+		
 		add(railSprite);
 		add(islandSprite);
+		add(obstacle);
 		add(targets);
 		add(targetsHitarea);
 		add(projectile);
@@ -293,48 +297,49 @@ class PlayState extends FlxState
 	public function onBulletCollides(callback:InteractionCallback) {
 		trace(callback.int2.userData.id);
 		
-		
-		
-		var body = callback.int1.castBody;
-		var body2 = callback.int2.castBody;
-		
-		//var initialVector : FlxVector = FlxVector.get(body.position.x, body.position.y);
-		
-		var initialRot = callback.int2.userData.parent.initialRotation;
-		trace("INIT : " + initialRot);
-		
-		var x2 = FlxMath.fastCos(0) - Math.sin(Std.parseInt(initialRot) * 1);
-		var y2 = Math.sin( 0) + FlxMath.fastCos(Std.parseInt(initialRot) * 1);
-		
-
-		
-		var centerProjectileP : FlxPoint = new FlxPoint(body.position.x, body.position.y);
-		var centerTargetP : FlxPoint = new FlxPoint(body2.position.x, body2.position.y);
-		
-		var vectorTarget =  new FlxVector(centerTargetP.x - centerProjectileP.x, centerTargetP.y - centerProjectileP.y);
-		var vectorInitial =  new FlxVector(x2,y2);
-		
-		var angle = FlxMath.dotProduct(vectorTarget.x, vectorTarget.y, vectorInitial.x, vectorInitial.y);
-		trace("ANGLE : " + angle);
-		
-		
-		
-		if (callback.int2.userData.type == TargetType.FIXED)
+		if(callback.int2.userData.type !=null)
 		{
-			//if (Math.abs(angle) > 10)
-			//{
-				callback.int2.userData.parent.kill();
-				targets.remove(callback.int2.userData.parent, true);
-			//}
+			var body = callback.int1.castBody;
+			var body2 = callback.int2.castBody;
 			
+			//var initialVector : FlxVector = FlxVector.get(body.position.x, body.position.y);
 			
-		}
+			var initialRot = callback.int2.userData.parent.initialRotation;
+			trace("INIT : " + initialRot);
+			
+			var x2 = FlxMath.fastCos(0) - Math.sin(Std.parseInt(initialRot) * 1);
+			var y2 = Math.sin( 0) + FlxMath.fastCos(Std.parseInt(initialRot) * 1);
+			
 
-		//trace(callback.int2.userData.parent);
-		//trace($type(callback.int2.cbTypes));
-		//trace($type(callback.int2.cbTypes));
-		projectile.body.velocity.setxy(0, 0);
-		projectile.state = ON_TARGET;
+			
+			var centerProjectileP : FlxPoint = new FlxPoint(body.position.x, body.position.y);
+			var centerTargetP : FlxPoint = new FlxPoint(body2.position.x, body2.position.y);
+			
+			var vectorTarget =  new FlxVector(centerTargetP.x - centerProjectileP.x, centerTargetP.y - centerProjectileP.y);
+			var vectorInitial =  new FlxVector(x2,y2);
+			
+			var angle = FlxMath.dotProduct(vectorTarget.x, vectorTarget.y, vectorInitial.x, vectorInitial.y);
+			trace("ANGLE : " + angle);
+			
+			
+			
+			if (callback.int2.userData.type == TargetType.FIXED)
+			{
+				//if (Math.abs(angle) > 10)
+				//{
+					callback.int2.userData.parent.kill();
+					targets.remove(callback.int2.userData.parent, true);
+				//}
+				
+				
+			}
+
+			//trace(callback.int2.userData.parent);
+			//trace($type(callback.int2.cbTypes));
+			//trace($type(callback.int2.cbTypes));
+			projectile.body.velocity.setxy(0, 0);
+			projectile.state = ON_TARGET;
+		}
 	}
 	
 	//public targetSpawner(): Void {
