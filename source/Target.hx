@@ -1,6 +1,7 @@
 package;
 
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
@@ -15,6 +16,7 @@ class Target extends FlxNapeSprite
 	public var type : Int;
 	public var _id :Int;
 	public var _type :TargetType;
+	public var hitArea:FlxSprite;
 	
 	public function new(X:Float=0, Y:Float=0, ?SimpleGraphic:FlxGraphicAsset, InitialRotation:Float=0, id:Int, type:TargetType) {
 		super(X, Y);
@@ -30,10 +32,15 @@ class Target extends FlxNapeSprite
 		initialRotation = InitialRotation;
 		trace("INIT ID[" + _id + "] : " + initialRotation); 
 		body.rotation = FlxAngle.asRadians(initialRotation);
+
 		body.userData.id = _id;
 		body.userData.type = _type;
 		body.userData.angle = initialRotation;
 		
+		hitArea = new FlxSprite(X-16, Y-16, "assets/images/hitarea.png");
+		hitArea.angle = initialRotation;
+		
 		//angle = initialRotation;
+
 	}
 }
