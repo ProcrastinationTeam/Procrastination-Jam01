@@ -204,6 +204,20 @@ class PlayState extends FlxState
 		
 		playerCrosshair.setPosition(FlxG.mouse.x, FlxG.mouse.y);
 		playerCrosshair.angle += 0.5;
+		
+		// If the projectile JUST LEFT the screen
+		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
+			projectileOutOfScreenCallback();
+		}
+		
+		if (FlxG.keys.justPressed.P)
+		{
+			isGamePaused = pauseGame(isGamePaused);
+		}
+		
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		// METHODE 1
+		
 		if (FlxG.keys.justPressed.SPACE) {
 			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
 				//playerDirection = !playerDirection;
@@ -217,23 +231,32 @@ class PlayState extends FlxState
 			//}});
 		}
 		
-		if (FlxG.keys.justPressed.P)
-		{
-			isGamePaused = pauseGame(isGamePaused);
-		}
+		var instantRotation:Float = (playerDirection ? -1 : 1) * elapsed * 360 * playerRpmCurrent / 60;
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		//if (FlxG.keys.justPressed.Z) {
-			//playerRpmCurrent++;
-		//} else if (FlxG.keys.justPressed.D) {
-			//playerRpmCurrent--;
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		// METHODE 2
+		//if (FlxG.keys.pressed.D) {
+			//if (playerRpmCurrent < playerRpmBase) {
+				//playerRpmCurrent++;
+			//}
+		//} else if (FlxG.keys.pressed.Q) {
+			//if (playerRpmCurrent > -playerRpmBase) {
+				//playerRpmCurrent--;
+			//}
+		//} else {
+			//if (Math.abs(playerRpmCurrent) < 0.3) {
+				//playerRpmCurrent = 0;
+			//} else if (playerRpmCurrent > 0) {
+				//playerRpmCurrent -= elapsed * 100;
+			//} else if (playerRpmCurrent < 0) {
+				//playerRpmCurrent += elapsed * 100;
+			//}
 		//}
+		//
+		//var instantRotation:Float = elapsed * 360 * playerRpmCurrent / 60;
+		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		// If the projectile JUST LEFT the screen
-		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
-			projectileOutOfScreenCallback();
-		}
-		
-		var instantRotation:Float = (playerDirection ? 1 : -1) * elapsed * 360 * playerRpmCurrent / 60;
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
 		
