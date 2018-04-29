@@ -5,11 +5,18 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 
 class Player extends FlxSprite 
 {
-	public var score: Int = 0;
+	public var score 		: Int 			= 0;
+	public var speed 		: PlayerSpeed 	= MEDIUM;
 
-	override public function new(?X:Float=0, ?Y:Float=0) 
+	override public function new(?X:Float=0, ?Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) 
 	{
 		super(X, Y);
-		loadGraphic(AssetsImages.player__png, false, 32, 32);
+		loadGraphic(SimpleGraphic, false, 32, 32);
 	}
+}
+
+enum PlayerSpeed {
+	SLOW;
+	MEDIUM;
+	FAST;
 }

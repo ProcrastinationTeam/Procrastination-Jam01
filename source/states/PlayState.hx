@@ -29,44 +29,46 @@ using flixel.util.FlxSpriteUtil;
 
 class PlayState extends FlxState
 {
-	public var background 			: FlxSprite;
-	public var railSprite 			: FlxSprite;
-	public var islandSprite 		: FlxSprite;
+	public var background 					: FlxSprite;
+	public var railSprite 					: FlxSprite;
+	public var islandSprite 				: FlxSprite;
 	
-	public var projectile	 		: Projectile;
-	public var projectileSprite		: FlxSprite;
+	public var projectile	 				: Projectile;
+	public var projectileSprite				: FlxSprite;
 	
 	public var projectileTrail				: Trail;
 	public var projectileSpriteTrail		: Trail;
 	
 	// TODO: juste un FlxSprite suffirait ?
-	public var player 				: Player;
-	public var playerCrosshair		: FlxSprite;
-	public var playerDirection 		: Bool 						= false;
-	public var gameEnd				: Bool						= false;
-	public var isGamePaused			: Bool						= false;
+	public var player 						: Player;
+	public var playerCrosshair				: FlxSprite;
+	public var playerDirectionClockwise 	: Bool 						= true;
+	public var gameEnd						: Bool						= false;
+	public var isGamePaused					: Bool						= false;
 	
-	public var elapsedTime 			: Float 					= 0;
-	public var center 				: FlxPoint;
-	public var radius 				: Float;
-	public var playerRpmBase		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
-	public var playerRpmCurrent		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
+	public var elapsedTime 					: Float 					= 0;
+	public var center 						: FlxPoint;
+	public var radius 						: Float;
+	public var playerRpmBase				: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
+	public var playerRpmCurrent				: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
 	
-	public var debugCanvas 			: FlxSprite;
+	public var debugCanvas 					: FlxSprite;
 	
-	public var rightVector 			: FlxVector;
+	public var rightVector 					: FlxVector;
 	
-	public var targets 				: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
-	public var targetsHitarea		: FlxSpriteGroup 	= new FlxSpriteGroup();
+	public var targets 						: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
+	public var targetsHitarea				: FlxSpriteGroup 			= new FlxSpriteGroup();
 
-	public var obstacles 				: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
+	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
 	//UI
-	var endText 					: FlxText;
-	var pauseText 					: FlxText;
-	var scoreText 					: FlxText;
+	public var endText 						: FlxText;
+	public var pauseText 					: FlxText;
+	public var scoreText 					: FlxText;
 
-	public var CB_BULLET			: CbType 					= new CbType();
+	public var CB_BULLET					: CbType 					= new CbType();
+	
+	public var useDebugControls 			: Bool						= false;
 	
 	
 	override public function create():Void
@@ -106,7 +108,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2);
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -120,11 +122,11 @@ class PlayState extends FlxState
 		FlxG.mouse.load(sprite.pixels);
 		//playerCrosshair.pi
 		
-		projectile = new Projectile(player.x, player.y, AssetsImages.projectile__png);
+		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
 		
-		projectileSprite = new FlxSprite( -100, -100, AssetsImages.projectile__png);
+		projectileSprite = new FlxSprite( -100, -100, AssetsImages.disc__png);
 		projectileSpriteTrail = new Trail(projectileSprite);
 		projectileSpriteTrail.start(false, 0.1);
 		
@@ -215,47 +217,95 @@ class PlayState extends FlxState
 			isGamePaused = pauseGame(isGamePaused);
 		}
 		
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		// METHODE 1
+		#if debug
+		if (FlxG.keys.pressed.SHIFT) {
+			if (FlxG.keys.justPressed.T) {
+				useDebugControls = !useDebugControls;
+				if (useDebugControls) {
+					// On vient de passer en mode debug
+					playerRpmCurrent = playerRpmBase;
+				} else {
+					// On repasse en mode normal
+					player.speed = MEDIUM;
+					playerRpmCurrent = playerRpmBase;
+					playerDirectionClockwise = true;
+				}
+			}
+		}
+		#end
 		
-		if (FlxG.keys.justPressed.SPACE) {
-			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
-				//playerDirection = !playerDirection;
-				//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
-			//}});
+		var instantRotation:Float = 0;
+		if (!useDebugControls) {
+			// METHOD 1: normal
+			if (FlxG.keys.justPressed.SPACE) {
+				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
+					//playerDirectionClockwise = !playerDirectionClockwise;
+					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
+				//}});
+				
+				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
+					playerDirectionClockwise = !playerDirectionClockwise;
+					//playerRpmCurrent = playerRpmBase;
+					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
+				//}});
+			}
 			
-			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
-				playerDirection = !playerDirection;
-				//playerRpmCurrent = playerRpmBase;
-				//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
-			//}});
+			if (FlxG.keys.justPressed.Z) {
+				switch(player.speed) {
+					case SLOW:
+						player.speed = MEDIUM;
+					case MEDIUM:
+						player.speed = FAST;
+					case FAST:
+						//
+				}
+			} else if (FlxG.keys.justPressed.S) {
+				switch(player.speed) {
+					case SLOW:
+					case MEDIUM:
+						player.speed = SLOW;
+					case FAST:
+						player.speed = MEDIUM;
+				}
+			}
+				
+			instantRotation = (playerDirectionClockwise ? 1 : -1) * elapsed * 360 * playerRpmCurrent / 60;
+			switch(player.speed) {
+				case SLOW:
+					instantRotation *= 0.75;
+				case MEDIUM:
+					instantRotation *= 1;
+				case FAST:
+					instantRotation *= 1.25;
+			}
+		} else {
+			// METHOD 2: debug
+			if (FlxG.keys.pressed.D) {
+				if (playerRpmCurrent < playerRpmBase) {
+					playerRpmCurrent++;
+				}
+			} else if (FlxG.keys.pressed.Q) {
+				if (playerRpmCurrent > -playerRpmBase) {
+					playerRpmCurrent--;
+				}
+			} else {
+				if (Math.abs(playerRpmCurrent) < 0.3) {
+					playerRpmCurrent = 0;
+				} else if (playerRpmCurrent > 0) {
+					playerRpmCurrent -= elapsed * 100;
+				} else if (playerRpmCurrent < 0) {
+					playerRpmCurrent += elapsed * 100;
+				}
+			}
+			
+			instantRotation = elapsed * 360 * playerRpmCurrent / 60;
 		}
 		
-		var instantRotation:Float = (playerDirection ? -1 : 1) * elapsed * 360 * playerRpmCurrent / 60;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		// METHODE 2
-		//if (FlxG.keys.pressed.D) {
-			//if (playerRpmCurrent < playerRpmBase) {
-				//playerRpmCurrent++;
-			//}
-		//} else if (FlxG.keys.pressed.Q) {
-			//if (playerRpmCurrent > -playerRpmBase) {
-				//playerRpmCurrent--;
-			//}
-		//} else {
-			//if (Math.abs(playerRpmCurrent) < 0.3) {
-				//playerRpmCurrent = 0;
-			//} else if (playerRpmCurrent > 0) {
-				//playerRpmCurrent -= elapsed * 100;
-			//} else if (playerRpmCurrent < 0) {
-				//playerRpmCurrent += elapsed * 100;
-			//}
-		//}
-		//
-		//var instantRotation:Float = elapsed * 360 * playerRpmCurrent / 60;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		
+		
 		
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
