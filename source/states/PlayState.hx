@@ -191,6 +191,11 @@ class PlayState extends FlxState
 			//playerRpmCurrent--;
 		//}
 		
+		// If the projectile JUST LEFT the screen
+		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
+			projectileOutOfScreenCallback();
+		}
+		
 		var instantRotation:Float = (playerDirection ? 1 : -1) * elapsed * 360 * playerRpmCurrent / 60;
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
@@ -206,12 +211,20 @@ class PlayState extends FlxState
 				// CONTINUE GOING TO TARGET
 			case MOVING_TOWARDS_PLAYER:
 				// FOLLOW PLAYER!
-				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * projectile.speed, vectorProjectileToPlayer.y * projectile.speed);
+				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
 				if (FlxMath.distanceBetween(projectile, player) < 30) {
 					projectile.state = ON_PLAYER;
 				}
 			case ON_TARGET:
 				// DO NOTHING!
+			case OFF_SCREEN:
+				// DO NOTHING!
+			case MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN:
+				// COME BACK FAST!
+				//projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeedOffScreen, vectorProjectileToPlayer.y * Tweaking.projectileSpeedOffScreen);
+				//if (FlxMath.distanceBetween(projectile, player) < 100) {
+					//projectile.state = ON_PLAYER;
+				//}
 		}
 		
 		if (FlxG.mouse.justPressed) {
@@ -219,15 +232,13 @@ class PlayState extends FlxState
 				case ON_PLAYER:
 					// GO !
 					projectile.state = MOVING_TOWARDS_TARGET;
-					projectile.body.velocity.setxy(vectorPlayerToMouse.x * projectile.speed, vectorPlayerToMouse.y * projectile.speed);
-				case MOVING_TOWARDS_TARGET:
-					// DO NOTHING!
-				case MOVING_TOWARDS_PLAYER:
-					// DO NOTHING!
+					projectile.body.velocity.setxy(vectorPlayerToMouse.x * Tweaking.projectileSpeed, vectorPlayerToMouse.y * Tweaking.projectileSpeed);
 				case ON_TARGET:
 					// COME BACK !
 					projectile.state = MOVING_TOWARDS_PLAYER;
-					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * 1000, vectorProjectileToPlayer.y * 1000);
+					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
+				default:
+					// DO NOTHING!
 			}
 			
 		}
@@ -343,6 +354,15 @@ class PlayState extends FlxState
 	//public targetSpawner(): Void {
 		//
 	//}
+	
+	public function projectileOutOfScreenCallback() {
+		projectile.state = OFF_SCREEN;
+		//projectile.body = false;
+		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
+			projectile.state = ON_PLAYER;
+			//projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
+		});
+	}
 	
 }
 
