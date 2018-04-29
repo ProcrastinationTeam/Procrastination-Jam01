@@ -38,7 +38,7 @@ class Target extends FlxNapeSprite
 		body.userData.type = _type;
 		body.userData.angle = initialRotation;
 		
-		hitArea = new FlxSprite(X-16, Y-16, "assets/images/hitarea.png");
+		hitArea = new FlxSprite(X - 16, Y - 16, AssetsImages.hitarea__png);
 		hitArea.angle = initialRotation;
 		
 		//angle = initialRotation;
