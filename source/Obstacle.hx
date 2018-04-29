@@ -37,7 +37,7 @@ class Obstacle extends FlxNapeSprite
 				
 			case ObsctaleType.BLOCK:
 				createRectangularBody(32, 32);	
-				loadGraphic("assets/images/obstacles.png", false, 32, 32);
+				loadGraphic("assets/images/obstacle.png", false, 32, 32);
 			
 			case ObsctaleType.HALF_HORIZONTAL:
 				createRectangularBody(32, 16);	

@@ -217,44 +217,44 @@ class PlayState extends FlxState
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		// METHODE 1
-		
-		if (FlxG.keys.justPressed.SPACE) {
-			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
+		//
+		//if (FlxG.keys.justPressed.SPACE) {
+			////FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
+				////playerDirection = !playerDirection;
+				////FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
+			////}});
+			//
+			////FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
 				//playerDirection = !playerDirection;
-				//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
-			//}});
-			
-			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
-				playerDirection = !playerDirection;
-				//playerRpmCurrent = playerRpmBase;
-				//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
-			//}});
-		}
-		
-		var instantRotation:Float = (playerDirection ? -1 : 1) * elapsed * 360 * playerRpmCurrent / 60;
+				////playerRpmCurrent = playerRpmBase;
+				////FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
+			////}});
+		//}
+		//
+		//var instantRotation:Float = (playerDirection ? -1 : 1) * elapsed * 360 * playerRpmCurrent / 60;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		// METHODE 2
-		//if (FlxG.keys.pressed.D) {
-			//if (playerRpmCurrent < playerRpmBase) {
-				//playerRpmCurrent++;
-			//}
-		//} else if (FlxG.keys.pressed.Q) {
-			//if (playerRpmCurrent > -playerRpmBase) {
-				//playerRpmCurrent--;
-			//}
-		//} else {
-			//if (Math.abs(playerRpmCurrent) < 0.3) {
-				//playerRpmCurrent = 0;
-			//} else if (playerRpmCurrent > 0) {
-				//playerRpmCurrent -= elapsed * 100;
-			//} else if (playerRpmCurrent < 0) {
-				//playerRpmCurrent += elapsed * 100;
-			//}
-		//}
-		//
-		//var instantRotation:Float = elapsed * 360 * playerRpmCurrent / 60;
+		if (FlxG.keys.pressed.D) {
+			if (playerRpmCurrent < playerRpmBase) {
+				playerRpmCurrent++;
+			}
+		} else if (FlxG.keys.pressed.Q) {
+			if (playerRpmCurrent > -playerRpmBase) {
+				playerRpmCurrent--;
+			}
+		} else {
+			if (Math.abs(playerRpmCurrent) < 0.3) {
+				playerRpmCurrent = 0;
+			} else if (playerRpmCurrent > 0) {
+				playerRpmCurrent -= elapsed * 100;
+			} else if (playerRpmCurrent < 0) {
+				playerRpmCurrent += elapsed * 100;
+			}
+		}
+		
+		var instantRotation:Float = elapsed * 360 * playerRpmCurrent / 60;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		rightVector.rotateByDegrees(instantRotation);
