@@ -8,6 +8,7 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxSpriteGroup;
+import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
@@ -24,6 +25,7 @@ import nape.callbacks.InteractionCallback;
 import nape.callbacks.InteractionListener;
 import nape.callbacks.InteractionType;
 import nape.dynamics.InteractionFilter;
+import nape.phys.Body;
 
 using flixel.util.FlxSpriteUtil;
 
@@ -36,6 +38,7 @@ class PlayState extends FlxState
 	
 	//
 	public var player 						: Player;
+	public var playerTarget					: FlxPoint 					= new FlxPoint();
 	public var playerCrosshair				: FlxSprite;
 	
 	public var projectile	 				: Projectile;
@@ -71,6 +74,9 @@ class PlayState extends FlxState
 
 	//
 	public var CB_BULLET					: CbType 					= new CbType();
+	
+	// Bordel
+	public var previousMousePosition		: FlxPoint					= new FlxPoint();
 	
 	override public function create():Void {
 		super.create();
@@ -201,16 +207,9 @@ class PlayState extends FlxState
 		
 		scoreText.text = "SCORE : " + player.score;
 		
-		playerCrosshair.setPosition(FlxG.mouse.x - playerCrosshair.width / 2, FlxG.mouse.y - playerCrosshair.height / 2);
-		playerCrosshair.angle += elapsed * 50;
-		
 		// If the projectile JUST LEFT the screen, bring int back after a delay
 		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
 			projectileOutOfScreenCallback();
-		}
-		
-		if (FlxG.keys.justPressed.P) {
-			pauseGame();
 		}
 		
 		#if debug
@@ -226,17 +225,50 @@ class PlayState extends FlxState
 				}
 			}
 		}
+		
+		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
+			FlxG.resetGame();
+		} else if (FlxG.keys.justPressed.R) {
+			FlxG.resetState();
+		}
 		#end
+		
+		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
+		
+		var mouseMoved = true;
+		if (previousMousePosition.x == FlxG.mouse.x && previousMousePosition.y == FlxG.mouse.y) {
+			// Pas bougé
+			mouseMoved = false;
+		}
+		
+		previousMousePosition.x = FlxG.mouse.x;
+		previousMousePosition.y = FlxG.mouse.y;
+		
+		var stickSensitivity = 10;
+		if (gamepad != null) {
+			playerTarget.set(playerTarget.x + gamepad.analog.value.RIGHT_STICK_X * stickSensitivity, playerTarget.y + gamepad.analog.value.RIGHT_STICK_Y * stickSensitivity);
+			//playerCrosshair.setPosition(playerCrosshair.x + gamepad.analog.value.RIGHT_STICK_X, playerCrosshair.y + gamepad.analog.value.RIGHT_STICK_Y);
+		}
+		if (mouseMoved) {
+			playerTarget.set(FlxG.mouse.x, FlxG.mouse.y);
+			//playerCrosshair.setPosition(FlxG.mouse.x - playerCrosshair.width / 2, FlxG.mouse.y - playerCrosshair.height / 2);
+		}
+		
+		playerCrosshair.setPosition(playerTarget.x - playerCrosshair.width / 2, playerTarget.y - playerCrosshair.height / 2);
+		playerCrosshair.angle += elapsed * 50;
+		
+		if (FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START)) {
+			ActionPauseGame();
+		}
 		
 		var instantRotation:Float = 0;
 		if (!useDebugControls) {
 			// METHOD 1: normal
-			if (FlxG.keys.justPressed.SPACE) {
-				// TODO: shinyser
-				player.clockwise = !player.clockwise;
+			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.B)) {
+				ActionChangeRotationDirection();
 			}
 			
-			if (FlxG.keys.justPressed.Z) {
+			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.justPressed.RIGHT_SHOULDER)) {
 				switch(player.speed) {
 					case SLOW:
 						player.speed = MEDIUM;
@@ -245,7 +277,7 @@ class PlayState extends FlxState
 					case FAST:
 						//
 				}
-			} else if (FlxG.keys.justPressed.S) {
+			} else if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.justPressed.LEFT_SHOULDER)) {
 				switch(player.speed) {
 					case SLOW:
 					case MEDIUM:
@@ -266,11 +298,11 @@ class PlayState extends FlxState
 			}
 		} else {
 			// METHOD 2: debug
-			if (FlxG.keys.pressed.D) {
+			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
 				if (player.rpm < Tweaking.playerRpmBase) {
 					player.rpm++;
 				}
-			} else if (FlxG.keys.pressed.Q) {
+			} else if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
 				if (player.rpm > -Tweaking.playerRpmBase) {
 					player.rpm--;
 				}
@@ -287,18 +319,12 @@ class PlayState extends FlxState
 			instantRotation = elapsed * 360 * player.rpm / 60;
 		}
 		
-		
-		
-		
-		
-
-		
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
 		
-		var vectorPlayerToMouse:FlxVector = FlxVector.get(
-													FlxG.mouse.x - (player.x - player.width / 2), 
-													FlxG.mouse.y - (player.y - player.height / 2)).normalize();
+		var vectorPlayerToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - (player.x - player.width / 2), 
+													playerTarget.y - (player.y - player.height / 2)).normalize();
 													
 		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
 													(player.x - player.width / 2) - projectile.x, 
@@ -334,12 +360,12 @@ class PlayState extends FlxState
 				}
 		}
 		
-		if (FlxG.mouse.justPressed) {
+		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.A)) {
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
 					projectile.state = MOVING_TOWARDS_TARGET;
-					projectile.body.velocity.setxy(vectorPlayerToMouse.x * Tweaking.projectileSpeed, vectorPlayerToMouse.y * Tweaking.projectileSpeed);
+					projectile.body.velocity.setxy(vectorPlayerToTarget.x * Tweaking.projectileSpeed, vectorPlayerToTarget.y * Tweaking.projectileSpeed);
 				case ON_TARGET:
 					// COME BACK !
 					projectile.state = MOVING_TOWARDS_PLAYER;
@@ -350,7 +376,7 @@ class PlayState extends FlxState
 			
 		}
 		
-		vectorPlayerToMouse.put();
+		vectorPlayerToTarget.put();
 		vectorProjectileToPlayer.put();
 		vectorProjectileSpriteToPlayer.put();
 		
@@ -377,19 +403,18 @@ class PlayState extends FlxState
 			
 			new FlxTimer().start(3, loadNextState, 1);
 		}
-		
-		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
-			FlxG.resetGame();
-		} else if (FlxG.keys.justPressed.R) {
-			FlxG.resetState();
-		}
+	}
+	
+	public function ActionChangeRotationDirection() {
+		// TODO: shinyser
+		player.clockwise = !player.clockwise;
 	}
 	
 	public function loadNextState(timer:FlxTimer):Void {
 		FlxG.resetState();
 	}
 	
-	public function pauseGame():Void {
+	public function ActionPauseGame():Void {
 		isGamePaused = !isGamePaused;
 		
 		if (isGamePaused) {
@@ -403,11 +428,12 @@ class PlayState extends FlxState
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
-		trace(callback.int2.userData.id);
-		
-		if(callback.int2.userData.type != null) {
-			var projectileBody = callback.int1.castBody;
-			var targetBody = callback.int2.castBody;
+		if (callback.int2.userData.type != null) {
+			
+			var projectileBody	: Body 			= callback.int1.castBody;
+			var targetBody		: Body 			= callback.int2.castBody;
+			var target			: Target 		= callback.int2.userData.parent;
+			var type			: TargetType 	= callback.int2.userData.type;
 			
 			var centerProjectileP : FlxPoint = new FlxPoint(projectileBody.position.x, projectileBody.position.y);
 			var centerTargetP : FlxPoint = new FlxPoint(targetBody.position.x, targetBody.position.y);
@@ -421,10 +447,11 @@ class PlayState extends FlxState
 			
 			var collisionAngle = vectorTargetLookingAt.degreesBetween(vectorTargetToProjectile);
 			
-			if (callback.int2.userData.type == TargetType.FIXED) {
+			if (type == TargetType.FIXED) {
 				if (collisionAngle > 150 && collisionAngle < 210) {
-					callback.int2.userData.parent.kill();
-					targets.remove(callback.int2.userData.parent, true);
+					target.kill();
+					targets.remove(target, true);
+					targetsHitarea.remove(target.hitArea, true);
 				}
 			}
 			
