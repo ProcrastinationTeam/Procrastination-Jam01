@@ -29,7 +29,8 @@ class Target extends FlxNapeSprite
 		body.allowMovement = false;
 		body.allowRotation = true;
 	
-		initialRotation = InitialRotation;
+	//	initialRotation = InitialRotation;
+		initialRotation = 0;
 		trace("INIT ID[" + _id + "] : " + initialRotation); 
 		body.rotation = FlxAngle.asRadians(initialRotation);
 
@@ -42,5 +43,11 @@ class Target extends FlxNapeSprite
 		
 		//angle = initialRotation;
 
+	}
+	
+	override public function update(elapsed : Float)
+	{
+		super.update(elapsed);
+		//hitArea.angle += 1;
 	}
 }

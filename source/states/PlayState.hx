@@ -36,10 +36,11 @@ class PlayState extends FlxState
 	public var projectile	 		: Projectile;
 	
 	// TODO: juste un FlxSprite suffirait ?
-	public var player 				: FlxSprite;
+	public var player 				: Player;
 	public var playerCrosshair		: FlxSprite;
 	public var playerDirection 		: Bool 						= false;
 	public var gameEnd				: Bool						= false;
+	public var isGamePaused			: Bool						= false;
 	
 	public var elapsedTime 			: Float 					= 0;
 	public var center 				: FlxPoint;
@@ -57,6 +58,8 @@ class PlayState extends FlxState
 
 	//UI
 	var endText 					: FlxText;
+	var pauseText 					: FlxText;
+	var scoreText 					: FlxText;
 
 	public var CB_BULLET			: CbType 					= new CbType();
 	
@@ -78,6 +81,14 @@ class PlayState extends FlxState
 		background = new FlxSprite(0, 0, "assets/images/background.png");
 		add(background);
 		
+		pauseText = new FlxText(0, 0, 0, "      PAUSE \n Resume : [P] ", 24);
+		pauseText.setPosition(FlxG.width / 2 - (pauseText.width / 2), FlxG.height / 3);
+		pauseText.set_visible(false);
+		
+		scoreText = new FlxText(0, 0, 0, "Score : 0", 24);
+		scoreText.setPosition(FlxG.width - 250, 10);
+		scoreText.set_visible(true);
+		
 		railSprite = new FlxSprite();
 		railSprite.screenCenter();
 		railSprite.loadGraphic("assets/images/railro.png", false, 800, 800, false);
@@ -90,17 +101,19 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new FlxSprite(railSprite.x, railSprite.y + railSprite.height / 2, "assets/images/target.png");
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2);
 		
 		playerCrosshair = new FlxSprite(0, 0);
-		playerCrosshair.loadGraphic("assets/images/crosshair.png", false, 15, 15, false);
+		playerCrosshair.scale.set(2, 2);
+		playerCrosshair.loadGraphic("assets/images/crosshair.png", true, 15, 15, false);
 		playerCrosshair.animation.add("idle", [0], 30, true, false, false);
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
-		
-		FlxG.mouse.load(playerCrosshair.pixels);
-		
+		var sprite = new FlxSprite();
+		sprite.makeGraphic(15, 15, FlxColor.TRANSPARENT);
+		FlxG.mouse.load(sprite.pixels);
+		//playerCrosshair.pi
 		
 		projectile = new Projectile(500, 400,"assets/images/target2.png");
 		var trail = new Trail(projectile).start(false, FlxG.elapsed);
@@ -128,7 +141,9 @@ class PlayState extends FlxState
 		add(projectile);
 
 		add(player);
-		//add(playerCrosshair);
+		add(playerCrosshair);
+		add(pauseText);
+		add(scoreText);
 		add(debugCanvas);
 		
 		FlxNapeSpace.space.listeners.add(new InteractionListener(
@@ -145,8 +160,10 @@ class PlayState extends FlxState
 		
 		elapsedTime += elapsed;
 		
-		playerCrosshair.setPosition(FlxG.mouse.x, FlxG.mouse.y);
+		scoreText.text = "SCORE : " + player.score;
 		
+		playerCrosshair.setPosition(FlxG.mouse.x, FlxG.mouse.y);
+		playerCrosshair.angle += 0.5;
 		if (FlxG.keys.justPressed.SPACE) {
 			//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
 				//playerDirection = !playerDirection;
@@ -158,6 +175,11 @@ class PlayState extends FlxState
 				//playerRpmCurrent = playerRpmBase;
 				//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
 			//}});
+		}
+		
+		if (FlxG.keys.justPressed.P)
+		{
+			isGamePaused = pauseGame(isGamePaused);
 		}
 		
 		//if (FlxG.keys.justPressed.Z) {
@@ -214,9 +236,9 @@ class PlayState extends FlxState
 		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
 		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
 		
-		for (target in targets) {
-			target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
-		}
+		//for (target in targets) {
+			//target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
+		//}
 		
 		//for (targeta in targetsHitarea) {
 			////targeta.angularVelocity = FlxAngle.asRadians(instantRotation * 60);
@@ -249,6 +271,23 @@ class PlayState extends FlxState
 	public function loadNextState(timer:FlxTimer) : Void
 	{
 		FlxG.resetState();
+	}
+	
+	public function pauseGame(isPause: Bool):Bool
+	{
+		
+		if (isPause)
+		{
+			FlxG.timeScale = 1;
+			pauseText.set_visible(false);
+		}
+		else
+		{
+			FlxG.timeScale = 0;
+			pauseText.set_visible(true);
+		}
+		isPause = !isPause;
+		return isPause;
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
