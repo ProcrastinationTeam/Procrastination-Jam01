@@ -29,48 +29,50 @@ using flixel.util.FlxSpriteUtil;
 
 class PlayState extends FlxState
 {
-	public var background 			: FlxSprite;
-	public var railSprite 			: FlxSprite;
-	public var islandSprite 		: FlxSprite;
+	//
+	public var background 					: FlxSprite;
+	public var railSprite 					: FlxSprite;
+	public var islandSprite 				: FlxSprite;
 	
-	public var projectile	 		: Projectile;
-	public var projectileSprite		: FlxSprite;
+	//
+	public var player 						: Player;
+	public var playerCrosshair				: FlxSprite;
 	
+	public var projectile	 				: Projectile;
 	public var projectileTrail				: Trail;
+	
+	public var projectileSprite				: FlxSprite;
 	public var projectileSpriteTrail		: Trail;
 	
-	// TODO: juste un FlxSprite suffirait ?
-	public var player 				: Player;
-	public var playerCrosshair		: FlxSprite;
-	public var playerDirection 		: Bool 						= false;
-	public var gameEnd				: Bool						= false;
-	public var isGamePaused			: Bool						= false;
+	//
+	public var debugCanvas 					: FlxSprite;
+	public var useDebugControls 			: Bool						= false;
 	
-	public var elapsedTime 			: Float 					= 0;
-	public var center 				: FlxPoint;
-	public var radius 				: Float;
-	public var playerRpmBase		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
-	public var playerRpmCurrent		: Float 					= 10;		// 1 = 1 turn/min, 2 = 2 turns/min
+	//
+	public var elapsedTime 					: Float 					= 0;
+	public var gameEnd						: Bool						= false;
+	public var isGamePaused					: Bool						= false;
 	
-	public var debugCanvas 			: FlxSprite;
+	//
+	public var rightVector 					: FlxVector;
+	public var center 						: FlxPoint;
+	public var radius 						: Float;
 	
-	public var rightVector 			: FlxVector;
-	
-	public var targets 				: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
-	public var targetsHitarea		: FlxSpriteGroup 	= new FlxSpriteGroup();
+	//
+	public var targets 						: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
+	public var targetsHitarea				: FlxSpriteGroup 			= new FlxSpriteGroup();
 
-	public var obstacles 				: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
+	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
-	//UI
-	var endText 					: FlxText;
-	var pauseText 					: FlxText;
-	var scoreText 					: FlxText;
+	// UI
+	public var endText 						: FlxText;
+	public var pauseText 					: FlxText;
+	public var scoreText 					: FlxText;
 
-	public var CB_BULLET			: CbType 					= new CbType();
+	//
+	public var CB_BULLET					: CbType 					= new CbType();
 	
-	
-	override public function create():Void
-	{
+	override public function create():Void {
 		super.create();
 		
 		Reg.state = this;
@@ -106,7 +108,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2);
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -120,11 +122,11 @@ class PlayState extends FlxState
 		FlxG.mouse.load(sprite.pixels);
 		//playerCrosshair.pi
 		
-		projectile = new Projectile(player.x, player.y, AssetsImages.projectile__png);
+		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
 		
-		projectileSprite = new FlxSprite( -100, -100, AssetsImages.projectile__png);
+		projectileSprite = new FlxSprite( -100, -100, AssetsImages.disc__png);
 		projectileSpriteTrail = new Trail(projectileSprite);
 		projectileSpriteTrail.start(false, 0.1);
 		
@@ -143,13 +145,10 @@ class PlayState extends FlxState
 			targetsHitarea.add(target.hitArea);
 		}
 		
-		
-		
-		for (i in 0...10)
-		{	var r = FlxG.random.int(0, 3);
+		for (i in 0...10) {
+			var r = FlxG.random.int(0, 3);
 			var type = null;
-			switch (r) 
-			{
+			switch (r) {
 				case 0:
 					 type = ObsctaleType.ANGLE;
 				case 1:
@@ -158,7 +157,6 @@ class PlayState extends FlxState
 					 type = ObsctaleType.HALF_HORIZONTAL;
 				case 3:
 					type = ObsctaleType.HALF_VERTICAL;
-					
 				default:
 					
 			}
@@ -179,12 +177,11 @@ class PlayState extends FlxState
 		
 		add(projectileSprite);
 		add(projectileSpriteTrail);
-
+		
 		add(player);
 		add(playerCrosshair);
 		add(pauseText);
 		add(scoreText);
-		add(debugCanvas);
 		
 		FlxNapeSpace.space.listeners.add(new InteractionListener(
 			CbEvent.BEGIN, 
@@ -192,10 +189,15 @@ class PlayState extends FlxState
 			CB_BULLET,
 			CbType.ANY_BODY,
 			onBulletCollides));
+		
+		#if debug
+		FlxNapeSpace.drawDebug = true;
+		
+		add(debugCanvas);
+		#end
 	}
 
-	override public function update(elapsed:Float):Void
-	{
+	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
 		
 		elapsedTime += elapsed;
@@ -210,52 +212,97 @@ class PlayState extends FlxState
 			projectileOutOfScreenCallback();
 		}
 		
-		if (FlxG.keys.justPressed.P)
-		{
-			isGamePaused = pauseGame(isGamePaused);
+		if (FlxG.keys.justPressed.P) {
+			pauseGame();
 		}
 		
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		// METHODE 1
-		//
-		//if (FlxG.keys.justPressed.SPACE) {
-			////FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
-				////playerDirection = !playerDirection;
-				////FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
-			////}});
-			//
-			////FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
-				//playerDirection = !playerDirection;
-				////playerRpmCurrent = playerRpmBase;
-				////FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
-			////}});
-		//}
-		//
-		//var instantRotation:Float = (playerDirection ? -1 : 1) * elapsed * 360 * playerRpmCurrent / 60;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
-		// METHODE 2
-		if (FlxG.keys.pressed.D) {
-			if (playerRpmCurrent < playerRpmBase) {
-				playerRpmCurrent++;
+		#if debug
+		if (FlxG.keys.pressed.SHIFT) {
+			if (FlxG.keys.justPressed.T) {
+				useDebugControls = !useDebugControls;
+				player.rpm = Tweaking.playerRpmBase;
+				
+				if (useDebugControls) {
+					// On vient de passer en mode debug
+				} else {
+					// On repasse en mode normal
+				}
 			}
-		} else if (FlxG.keys.pressed.Q) {
-			if (playerRpmCurrent > -playerRpmBase) {
-				playerRpmCurrent--;
+		}
+		#end
+		
+		var instantRotation:Float = 0;
+		if (!useDebugControls) {
+			// METHOD 1: normal
+			if (FlxG.keys.justPressed.SPACE) {
+				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
+					//playerDirectionClockwise = !playerDirectionClockwise;
+					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
+				//}});
+				
+				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
+					player.clockwise = !player.clockwise;
+					//playerRpmCurrent = playerRpmBase;
+					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
+				//}});
+			}
+			
+			if (FlxG.keys.justPressed.Z) {
+				switch(player.speed) {
+					case SLOW:
+						player.speed = MEDIUM;
+					case MEDIUM:
+						player.speed = FAST;
+					case FAST:
+						//
+				}
+			} else if (FlxG.keys.justPressed.S) {
+				switch(player.speed) {
+					case SLOW:
+					case MEDIUM:
+						player.speed = SLOW;
+					case FAST:
+						player.speed = MEDIUM;
+				}
+			}
+				
+			instantRotation = (player.clockwise ? 1 : -1) * elapsed * 360 * player.rpm / 60;
+			switch(player.speed) {
+				case SLOW:
+					instantRotation *= 0.75;
+				case MEDIUM:
+					instantRotation *= 1;
+				case FAST:
+					instantRotation *= 1.25;
 			}
 		} else {
-			if (Math.abs(playerRpmCurrent) < 0.3) {
-				playerRpmCurrent = 0;
-			} else if (playerRpmCurrent > 0) {
-				playerRpmCurrent -= elapsed * 100;
-			} else if (playerRpmCurrent < 0) {
-				playerRpmCurrent += elapsed * 100;
+			// METHOD 2: debug
+			if (FlxG.keys.pressed.D) {
+				if (player.rpm < Tweaking.playerRpmBase) {
+					player.rpm++;
+				}
+			} else if (FlxG.keys.pressed.Q) {
+				if (player.rpm > -Tweaking.playerRpmBase) {
+					player.rpm--;
+				}
+			} else {
+				if (Math.abs(player.rpm) < 0.5) {
+					player.rpm = 0;
+				} else if (player.rpm > 0) {
+					player.rpm -= elapsed * 100;
+				} else if (player.rpm < 0) {
+					player.rpm += elapsed * 100;
+				}
 			}
+			
+			instantRotation = elapsed * 360 * player.rpm / 60;
 		}
 		
-		var instantRotation:Float = elapsed * 360 * playerRpmCurrent / 60;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		
+		
+
 		
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
@@ -316,10 +363,13 @@ class PlayState extends FlxState
 		
 		vectorPlayerToMouse.put();
 		vectorProjectileToPlayer.put();
+		vectorProjectileSpriteToPlayer.put();
 		
+		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
 		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
 		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
+		#end
 		
 		//for (target in targets) {
 			//target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
@@ -330,49 +380,38 @@ class PlayState extends FlxState
 			////targeta.angle= FlxAngle.asRadians(instantRotation * 60);
 		//}
 		
-		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
-			FlxG.resetGame();
-		} else if (FlxG.keys.justPressed.R) {
-			FlxG.resetState();
-		}
-		
-		if (targets.length == 0 && !gameEnd)
-		{
+		if (targets.length == 0 && !gameEnd) {
 			trace("You win");
 			gameEnd = true;
 			endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
 			endText.setPosition(FlxG.width / 2 - (endText.width/2), FlxG.height / 2 - (endText.height/2));
 			add(endText);	
 			
-			var relaunchGameTimer = new FlxTimer();
-			relaunchGameTimer.start(3, loadNextState, 1);
-			
-			
-			
+			new FlxTimer().start(3, loadNextState, 1);
 		}
 		
+		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
+			FlxG.resetGame();
+		} else if (FlxG.keys.justPressed.R) {
+			FlxG.resetState();
+		}
 	}
 	
-	public function loadNextState(timer:FlxTimer) : Void
-	{
+	public function loadNextState(timer:FlxTimer):Void {
 		FlxG.resetState();
 	}
 	
-	public function pauseGame(isPause: Bool):Bool
-	{
+	public function pauseGame():Void {
+		isGamePaused = !isGamePaused;
 		
-		if (isPause)
-		{
-			FlxG.timeScale = 1;
-			pauseText.set_visible(false);
-		}
-		else
-		{
+		if (isGamePaused) {
 			FlxG.timeScale = 0;
-			pauseText.set_visible(true);
+			pauseText.visible = true;
 		}
-		isPause = !isPause;
-		return isPause;
+		else {
+			FlxG.timeScale = 1;
+			pauseText.visible = false;
+		}
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
@@ -430,12 +469,10 @@ class PlayState extends FlxState
 	public function projectileOutOfScreenCallback() {
 		projectile.state = OFF_SCREEN;
 		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
-			//projectile.state = ON_PLAYER;
 			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
 			projectileSprite.setPosition(projectile.x, projectile.y);
 		});
 	}
-	
 }
 
 
