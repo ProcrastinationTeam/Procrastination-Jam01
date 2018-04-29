@@ -117,11 +117,6 @@ class PlayState extends FlxState
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
-		var sprite = new FlxSprite();
-		sprite.makeGraphic(15, 15, FlxColor.TRANSPARENT);
-		FlxG.mouse.load(sprite.pixels);
-		//playerCrosshair.pi
-		
 		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
@@ -195,6 +190,8 @@ class PlayState extends FlxState
 		
 		add(debugCanvas);
 		#end
+		
+		FlxG.mouse.visible = false;
 	}
 
 	override public function update(elapsed:Float):Void	{
@@ -204,10 +201,10 @@ class PlayState extends FlxState
 		
 		scoreText.text = "SCORE : " + player.score;
 		
-		playerCrosshair.setPosition(FlxG.mouse.x, FlxG.mouse.y);
-		playerCrosshair.angle += 0.5;
+		playerCrosshair.setPosition(FlxG.mouse.x - playerCrosshair.width / 2, FlxG.mouse.y - playerCrosshair.height / 2);
+		playerCrosshair.angle += elapsed * 50;
 		
-		// If the projectile JUST LEFT the screen
+		// If the projectile JUST LEFT the screen, bring int back after a delay
 		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
 			projectileOutOfScreenCallback();
 		}
@@ -235,16 +232,8 @@ class PlayState extends FlxState
 		if (!useDebugControls) {
 			// METHOD 1: normal
 			if (FlxG.keys.justPressed.SPACE) {
-				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartIn, onComplete: function(_) {
-					//playerDirectionClockwise = !playerDirectionClockwise;
-					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.2, {type: FlxTween.ONESHOT, ease: FlxEase.quartOut});
-				//}});
-				
-				//FlxTween.tween(this, {playerRpmCurrent: 0}, 0.1, {ease: FlxEase.linear, onComplete: function(_) {
-					player.clockwise = !player.clockwise;
-					//playerRpmCurrent = playerRpmBase;
-					//FlxTween.tween(this, {playerRpmCurrent: playerRpmBase}, 0.1, {ease: FlxEase.linear});
-				//}});
+				// TODO: shinyser
+				player.clockwise = !player.clockwise;
 			}
 			
 			if (FlxG.keys.justPressed.Z) {
