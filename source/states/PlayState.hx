@@ -145,13 +145,10 @@ class PlayState extends FlxState
 			targetsHitarea.add(target.hitArea);
 		}
 		
-		
-		
-		for (i in 0...10)
-		{	var r = FlxG.random.int(0, 3);
+		for (i in 0...10) {
+			var r = FlxG.random.int(0, 3);
 			var type = null;
-			switch (r) 
-			{
+			switch (r) {
 				case 0:
 					 type = ObsctaleType.ANGLE;
 				case 1:
@@ -160,7 +157,6 @@ class PlayState extends FlxState
 					 type = ObsctaleType.HALF_HORIZONTAL;
 				case 3:
 					type = ObsctaleType.HALF_VERTICAL;
-					
 				default:
 					
 			}
@@ -181,12 +177,11 @@ class PlayState extends FlxState
 		
 		add(projectileSprite);
 		add(projectileSpriteTrail);
-
+		
 		add(player);
 		add(playerCrosshair);
 		add(pauseText);
 		add(scoreText);
-		add(debugCanvas);
 		
 		FlxNapeSpace.space.listeners.add(new InteractionListener(
 			CbEvent.BEGIN, 
@@ -194,6 +189,12 @@ class PlayState extends FlxState
 			CB_BULLET,
 			CbType.ANY_BODY,
 			onBulletCollides));
+		
+		#if debug
+		FlxNapeSpace.drawDebug = true;
+		
+		add(debugCanvas);
+		#end
 	}
 
 	override public function update(elapsed:Float):Void

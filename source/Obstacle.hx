@@ -23,27 +23,40 @@ class Obstacle extends FlxNapeSprite
 		switch (type) 
 		{
 			case ObsctaleType.ANGLE:
+				loadGraphic(AssetsImages.obstacleAngle__png, false, 32, 32);
 				var array = new Array<Vec2>();
-				array.push(new Vec2(0, 0));
-				array.push(new Vec2(32, 0));
-				array.push(new Vec2(32, 32));
+				array.push(new Vec2( 16, -16));
+				array.push(new Vec2( 16,  16));
+				array.push(new Vec2(-16,  16));
 				body.shapes.clear();
 				body.shapes.add(new Polygon(array));
-				loadGraphic(AssetsImages.obstacleAngle__png, false, 32, 32);
 				
 			case ObsctaleType.BLOCK:
-				createRectangularBody(32, 32);	
 				loadGraphic(AssetsImages.obstacles__png, false, 32, 32);
+				createRectangularBody(32, 32);	
 			
 			case ObsctaleType.HALF_HORIZONTAL:
-				createRectangularBody(32, 16);	
 				loadGraphic(AssetsImages.obstaclehalfH__png, false, 32, 32);
+				var array = new Array<Vec2>();
+				array.push(new Vec2(-16,   0));
+				array.push(new Vec2( 16,   0));
+				array.push(new Vec2( 16,  16));
+				array.push(new Vec2(-16,  16));
+				body.shapes.clear();
+				body.shapes.add(new Polygon(array));
 				
 			case ObsctaleType.HALF_VERTICAL:
-				createRectangularBody(16, 32);
 				loadGraphic(AssetsImages.obstaclehalfV__png, false, 32, 32);
-			default:
+				var array = new Array<Vec2>();
+				array.push(new Vec2(-16, -16));
+				array.push(new Vec2(  0, -16));
+				array.push(new Vec2(  0,  16));
+				array.push(new Vec2(-16,  16));
+				body.shapes.clear();
+				body.shapes.add(new Polygon(array));
 				
+			default:
+				//
 		}
 		
 		body.allowMovement = false;
