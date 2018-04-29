@@ -58,7 +58,8 @@ class PlayState extends FlxState
 	
 	public var targets 				: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
 	public var targetsHitarea		: FlxSpriteGroup 	= new FlxSpriteGroup();
-	
+
+	public var obstacles 				: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
 	//UI
 	var endText 					: FlxText;
@@ -142,12 +143,34 @@ class PlayState extends FlxState
 			targetsHitarea.add(target.hitArea);
 		}
 		
-		var obstacle = new Obstacle(center.x + 100, center.y, ObsctaleType.ANGLE);
 		
+		
+		for (i in 0...10)
+		{	var r = FlxG.random.int(0, 3);
+			var type = null;
+			switch (r) 
+			{
+				case 0:
+					 type = ObsctaleType.ANGLE;
+				case 1:
+					 type = ObsctaleType.BLOCK;
+				case 2:
+					 type = ObsctaleType.HALF_HORIZONTAL;
+				case 3:
+					type = ObsctaleType.HALF_VERTICAL;
+					
+				default:
+					
+			}
+			
+			var obstacle = new Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), type);
+			
+			obstacles.add(obstacle);
+		}
 		
 		add(railSprite);
 		add(islandSprite);
-		add(obstacle);
+		add(obstacles);
 		add(targets);
 		add(targetsHitarea);
 		

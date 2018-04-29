@@ -18,23 +18,44 @@ class Obstacle extends FlxNapeSprite
 	public function new(X:Float=0, Y:Float=0, type : ObsctaleType) 
 	{
 		super(X, Y);
+		_type = type;
 		set_physicsEnabled(true);
-		loadGraphic("assets/images/obstacles.png", false, 32, 32);
-		createRectangularBody(32, 32);
+		
+	
 		var array = new Array<Vec2>();
 		array.push(new Vec2(0, 0));
-		array.push(new Vec2(1, 0));
-		array.push(new Vec2(0, 1));
+		array.push(new Vec2(32, 0));
+		array.push(new Vec2(0, 32));
 		
-		//trace(array);
-		//
-		//
-		//var triangle = new Polygon(array);
-		//trace(triangle);
-		//body.shapes.add(triangle);
+	
+		switch (type) 
+		{
+			case ObsctaleType.ANGLE:
+				body.shapes.clear();
+				body.shapes.add(new Polygon(array));
+				loadGraphic("assets/images/obstacleAngle.png", false, 32, 32);
+				
+			case ObsctaleType.BLOCK:
+				createRectangularBody(32, 32);	
+				loadGraphic("assets/images/obstacles.png", false, 32, 32);
+			
+			case ObsctaleType.HALF_HORIZONTAL:
+				createRectangularBody(32, 16);	
+				loadGraphic("assets/images/obstaclehalfH.png", false, 32, 32);
+			case ObsctaleType.HALF_VERTICAL:
+				createRectangularBody(16, 32);
+				loadGraphic("assets/images/obstaclehalfV.png", false, 32, 32);
+			default:
+				
+		}
+		
+		
+		
+		
+		
 		body.allowMovement = false;
 		body.allowRotation = false;
-		_type = type;
+		
 		
 		
 	}
