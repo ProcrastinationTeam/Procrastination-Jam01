@@ -34,8 +34,10 @@ class PlayState extends FlxState
 	public var islandSprite 		: FlxSprite;
 	
 	public var projectile	 		: Projectile;
+	public var projectileSprite		: FlxSprite;
 	
-	public var projectileTrail		: Trail;
+	public var projectileTrail				: Trail;
+	public var projectileSpriteTrail		: Trail;
 	
 	// TODO: juste un FlxSprite suffirait ?
 	public var player 				: Player;
@@ -121,6 +123,10 @@ class PlayState extends FlxState
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
 		
+		projectileSprite = new FlxSprite( -100, -100, AssetsImages.projectile__png);
+		projectileSpriteTrail = new Trail(projectileSprite);
+		projectileSpriteTrail.start(false, 0.1);
+		
 		center = new FlxPoint(railSprite.x + railSprite.width / 2, railSprite.y + railSprite.height / 2);
 		radius = railSprite.width / 2;
 		
@@ -144,8 +150,12 @@ class PlayState extends FlxState
 		add(obstacle);
 		add(targets);
 		add(targetsHitarea);
+		
 		add(projectile);
 		add(projectileTrail);
+		
+		add(projectileSprite);
+		add(projectileSpriteTrail);
 
 		add(player);
 		add(playerCrosshair);
@@ -204,8 +214,17 @@ class PlayState extends FlxState
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
 		
-		var vectorPlayerToMouse:FlxVector = FlxVector.get(FlxG.mouse.x - (player.x - player.width / 2), FlxG.mouse.y - (player.y - player.height / 2)).normalize();
-		var vectorProjectileToPlayer:FlxVector = FlxVector.get((player.x - player.width / 2) - projectile.x, (player.y - player.height / 2) - projectile.y).normalize();
+		var vectorPlayerToMouse:FlxVector = FlxVector.get(
+													FlxG.mouse.x - (player.x - player.width / 2), 
+													FlxG.mouse.y - (player.y - player.height / 2)).normalize();
+													
+		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
+													(player.x - player.width / 2) - projectile.x, 
+													(player.y - player.height / 2) - projectile.y).normalize();
+													
+		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
+													(player.x - player.width / 2) - projectileSprite.x, 
+													(player.y - player.height / 2) - projectileSprite.y).normalize();
 			
 		switch(projectile.state) {
 			case ON_PLAYER:
@@ -225,10 +244,12 @@ class PlayState extends FlxState
 				// DO NOTHING!
 			case MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN:
 				// COME BACK FAST!
-				//projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeedOffScreen, vectorProjectileToPlayer.y * Tweaking.projectileSpeedOffScreen);
-				//if (FlxMath.distanceBetween(projectile, player) < 100) {
-					//projectile.state = ON_PLAYER;
-				//}
+				projectileSprite.velocity.set(vectorProjectileSpriteToPlayer.x * Tweaking.projectileSpeedOffScreen, vectorProjectileSpriteToPlayer.y * Tweaking.projectileSpeedOffScreen);
+				if (FlxMath.distanceBetween(projectileSprite, player) < 100) {
+					projectile.state = ON_PLAYER;
+					projectileSprite.setPosition( -100, -100);
+					projectileSprite.velocity.set(0, 0);
+				}
 		}
 		
 		if (FlxG.mouse.justPressed) {
@@ -362,10 +383,10 @@ class PlayState extends FlxState
 	
 	public function projectileOutOfScreenCallback() {
 		projectile.state = OFF_SCREEN;
-		//projectile.body = false;
 		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
-			projectile.state = ON_PLAYER;
-			//projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
+			//projectile.state = ON_PLAYER;
+			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
+			projectileSprite.setPosition(projectile.x, projectile.y);
 		});
 	}
 	
@@ -375,9 +396,9 @@ class PlayState extends FlxState
 
 class Trail extends FlxEmitter
 {
-	private var attach:FlxNapeSprite;
+	private var attach:FlxSprite;
 	
-	public function new(Attach:FlxNapeSprite)
+	public function new(Attach:FlxSprite)
 	{
 		super(0, 0);
 		
