@@ -4,8 +4,9 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 
 class Projectile extends FlxNapeSprite
 {
-	public var isOnTarget:Bool = false;
-	public var state:ProjectileState = ON_PLAYER;
+	public var isOnTarget			: Bool 				= false;
+	public var state				: ProjectileState	= ON_PLAYER;
+	public var speed				: Int				= 1000;
 	
 	public function new(X:Float=0, Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) {
 		super(X, Y);

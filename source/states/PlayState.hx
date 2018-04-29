@@ -35,6 +35,8 @@ class PlayState extends FlxState
 	
 	public var projectile	 		: Projectile;
 	
+	public var projectileTrail		: Trail;
+	
 	// TODO: juste un FlxSprite suffirait ?
 	public var player 				: Player;
 	public var playerCrosshair		: FlxSprite;
@@ -78,7 +80,7 @@ class PlayState extends FlxState
 		// Level initialization
 		bgColor = FlxColor.GRAY;
 		
-		background = new FlxSprite(0, 0, "assets/images/background.png");
+		background = new FlxSprite(0, 0, AssetsImages.background__png);
 		add(background);
 		
 		pauseText = new FlxText(0, 0, 0, "      PAUSE \n Resume : [P] ", 24);
@@ -91,13 +93,13 @@ class PlayState extends FlxState
 		
 		railSprite = new FlxSprite();
 		railSprite.screenCenter();
-		railSprite.loadGraphic("assets/images/railro.png", false, 800, 800, false);
+		railSprite.loadGraphic(AssetsImages.railro__png, false, 800, 800, false);
 		railSprite.x -= railSprite.width / 2;
 		railSprite.y -= railSprite.height / 2;
 		
 		islandSprite = new FlxSprite();
 		islandSprite.screenCenter();
-		islandSprite.loadGraphic("assets/images/island.png", false, 600,600, false);
+		islandSprite.loadGraphic(AssetsImages.island__png, false, 600, 600, false);
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
@@ -105,7 +107,7 @@ class PlayState extends FlxState
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
-		playerCrosshair.loadGraphic("assets/images/crosshair.png", true, 15, 15, false);
+		playerCrosshair.loadGraphic(AssetsImages.crosshair__png, true, 15, 15, false);
 		playerCrosshair.animation.add("idle", [0], 30, true, false, false);
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
@@ -115,9 +117,9 @@ class PlayState extends FlxState
 		FlxG.mouse.load(sprite.pixels);
 		//playerCrosshair.pi
 		
-		projectile = new Projectile(500, 400,"assets/images/target2.png");
-		var trail = new Trail(projectile).start(false, FlxG.elapsed);
-		add(trail);
+		projectile = new Projectile(player.x, player.y, AssetsImages.projectile__png);
+		projectileTrail = new Trail(projectile);
+		projectileTrail.start(false, 0.1);
 		
 		center = new FlxPoint(railSprite.x + railSprite.width / 2, railSprite.y + railSprite.height / 2);
 		radius = railSprite.width / 2;
@@ -128,7 +130,7 @@ class PlayState extends FlxState
 		rightVector = FlxVector.get(radius, 0);
 		
 		for (i in 0...10) {
-			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), "assets/images/target.png", FlxG.random.int(0, 359), i, TargetType.FIXED );
+			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
 			target.body.userData.parent = target;
 			targets.add(target);
 			targetsHitarea.add(target.hitArea);
@@ -143,6 +145,7 @@ class PlayState extends FlxState
 		add(targets);
 		add(targetsHitarea);
 		add(projectile);
+		add(projectileTrail);
 
 		add(player);
 		add(playerCrosshair);
@@ -201,13 +204,13 @@ class PlayState extends FlxState
 			
 		switch(projectile.state) {
 			case ON_PLAYER:
-				// CONTINUE GOING TO TARGET
-				projectile.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
+				// CONTINUE FOLLOWING PLAYER!
+				projectile.setPosition(player.x, player.y);
 			case MOVING_TOWARDS_TARGET:
-				// DO NOTHING!
+				// CONTINUE GOING TO TARGET
 			case MOVING_TOWARDS_PLAYER:
 				// FOLLOW PLAYER!
-				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * 1000, vectorProjectileToPlayer.y * 1000);
+				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * projectile.speed, vectorProjectileToPlayer.y * projectile.speed);
 				if (FlxMath.distanceBetween(projectile, player) < 30) {
 					projectile.state = ON_PLAYER;
 				}
@@ -220,7 +223,7 @@ class PlayState extends FlxState
 				case ON_PLAYER:
 					// GO !
 					projectile.state = MOVING_TOWARDS_TARGET;
-					projectile.body.velocity.setxy(vectorPlayerToMouse.x * 1000, vectorPlayerToMouse.y * 1000);
+					projectile.body.velocity.setxy(vectorPlayerToMouse.x * projectile.speed, vectorPlayerToMouse.y * projectile.speed);
 				case MOVING_TOWARDS_TARGET:
 					// DO NOTHING!
 				case MOVING_TOWARDS_PLAYER:
@@ -358,7 +361,7 @@ class Trail extends FlxEmitter
 	{
 		super(0, 0);
 		
-		loadParticles("assets/images/shooter.png", 20, 0);
+		loadParticles(AssetsImages.shooter__png, 20, 0);
 		attach = Attach;
 		
 		velocity.set(0, 0);
