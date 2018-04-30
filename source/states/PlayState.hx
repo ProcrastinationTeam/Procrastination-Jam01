@@ -45,11 +45,11 @@ class PlayState extends FlxState
 	public var islandSprite 				: FlxSprite;
 	
 	//
-	public var player 						: entities.Player;
+	public var player 						: Player;
 	public var playerTarget					: FlxPoint 					= new FlxPoint();
 	public var playerCrosshair				: FlxSprite;
 	
-	public var projectile	 				: entities.Projectile;
+	public var projectile	 				: Projectile;
 	public var projectileTrail				: Trail;
 	
 	public var projectileSprite				: FlxSprite;
@@ -70,10 +70,10 @@ class PlayState extends FlxState
 	public var radius 						: Float;
 	
 	//
-	public var targets 						: FlxTypedGroup<entities.Target> 	= new FlxTypedGroup<entities.Target>();
+	public var targets 						: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
 	public var targetsHitarea				: FlxSpriteGroup 			= new FlxSpriteGroup();
 
-	public var obstacles 					: FlxTypedGroup<entities.Obstacle> 	= new FlxTypedGroup<entities.Obstacle>();
+	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
 	// UI
 	public var endText 						: FlxText;
@@ -131,7 +131,7 @@ class PlayState extends FlxState
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
-		projectile = new entities.Projectile(player.x, player.y, AssetsImages.disc__png);
+		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
 		
@@ -178,13 +178,14 @@ class PlayState extends FlxState
 		add(targets);
 		add(targetsHitarea);
 		
+		add(player);
+		
 		add(projectile);
 		add(projectileTrail);
 		
 		add(projectileSprite);
 		add(projectileSpriteTrail);
 		
-		add(player);
 		add(playerCrosshair);
 		add(pauseText);
 		add(scoreText);
@@ -325,19 +326,19 @@ class PlayState extends FlxState
 		}
 		
 		rightVector.rotateByDegrees(instantRotation);
-		player.setPosition(center.x + rightVector.x - player.width / 2, center.y + rightVector.y - player.height / 2);
+		player.setPosition(center.x + rightVector.x, center.y + rightVector.y);
 		
-		var vectorPlayerToTarget:FlxVector = FlxVector.get(
-													playerTarget.x - (player.x - player.width / 2), 
-													playerTarget.y - (player.y - player.height / 2)).normalize();
+		var vectorProjectileToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - (projectile.x + projectile.width / 2),
+													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
 													
 		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
-													(player.x - player.width / 2) - projectile.x, 
-													(player.y - player.height / 2) - projectile.y).normalize();
+													player.x - (projectile.x + projectile.width / 2), 
+													player.y - (projectile.y + projectile.height / 2)).normalize();
 													
 		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
-													(player.x - player.width / 2) - projectileSprite.x, 
-													(player.y - player.height / 2) - projectileSprite.y).normalize();
+													player.x - (projectile.x + projectile.width / 2), 
+													player.y - (projectile.y + projectile.height / 2)).normalize();
 			
 		switch(projectile.state) {
 			case ON_PLAYER:
@@ -370,7 +371,7 @@ class PlayState extends FlxState
 				case ON_PLAYER:
 					// GO !
 					projectile.state = MOVING_TOWARDS_TARGET;
-					projectile.body.velocity.setxy(vectorPlayerToTarget.x * Tweaking.projectileSpeed, vectorPlayerToTarget.y * Tweaking.projectileSpeed);
+					projectile.body.velocity.setxy(vectorProjectileToTarget.x * Tweaking.projectileSpeed, vectorProjectileToTarget.y * Tweaking.projectileSpeed);
 				case ON_TARGET:
 					// COME BACK !
 					projectile.state = MOVING_TOWARDS_PLAYER;
@@ -380,10 +381,6 @@ class PlayState extends FlxState
 			}
 			
 		}
-		
-		vectorPlayerToTarget.put();
-		vectorProjectileToPlayer.put();
-		vectorProjectileSpriteToPlayer.put();
 		
 		for (target in targets) {
 			target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
@@ -397,7 +394,7 @@ class PlayState extends FlxState
 			trace("You win");
 			gameEnd = true;
 			endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
-			endText.setPosition(FlxG.width / 2 - (endText.width/2), FlxG.height / 2 - (endText.height/2));
+			endText.setPosition(FlxG.width / 2 - (endText.width / 2), FlxG.height / 2 - (endText.height / 2));
 			add(endText);	
 			
 			new FlxTimer().start(3, loadNextState, 1);
@@ -405,9 +402,15 @@ class PlayState extends FlxState
 		
 		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
-		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
 		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
 		#end
+		
+		vectorProjectileToTarget.put();
+		vectorProjectileToPlayer.put();
+		vectorProjectileSpriteToPlayer.put();
 	}
 	
 	public function ActionChangeRotationDirection() {

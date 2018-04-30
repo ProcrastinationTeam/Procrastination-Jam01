@@ -1,5 +1,6 @@
 package entities;
 
+import enums.PlayerSpeed;
 import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
@@ -7,7 +8,7 @@ class Player extends FlxSprite
 {
 	public var score 						: Int 			= 0;
 	
-	public var speed 						: PlayerSpeed 	= MEDIUM;
+	public var speed 						: PlayerSpeed 	= PlayerSpeed.MEDIUM;
 	public var rpm 							: Float 		= Tweaking.playerRpmBase;
 	public var clockwise				 	: Bool 			= true;
 
@@ -15,11 +16,6 @@ class Player extends FlxSprite
 	{
 		super(X, Y);
 		loadGraphic(SimpleGraphic, false, 32, 32);
+		offset.set(16, 16);
 	}
-}
-
-enum PlayerSpeed {
-	SLOW;
-	MEDIUM;
-	FAST;
 }

@@ -14,7 +14,7 @@ class Projectile extends FlxNapeSprite
 		//loadRotatedGraphic(SimpleGraphic, 360);
 		loadRotatedGraphic(SimpleGraphic, 360);
 		
-		createCircularBody(9.5);
+		createCircularBody(8);
 		body.allowMovement = true;
 		body.allowRotation = true;
 		
