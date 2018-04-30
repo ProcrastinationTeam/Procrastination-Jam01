@@ -1,6 +1,6 @@
 package enums;
 
-enum ObsctaleType {
+enum ObstacleShape {
 	BLOCK;
 	ANGLE;
 	HALF_HORIZONTAL;

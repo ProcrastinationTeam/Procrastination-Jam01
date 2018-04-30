@@ -1,6 +1,6 @@
 package entities;
 
-import enums.ObsctaleType;
+import enums.ObsctaleShape;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import nape.geom.Vec2;
@@ -10,21 +10,36 @@ import enums.EntityType;
 
 class Obstacle extends FlxNapeSprite 
 {
-	public var entityType 	: EntityType		 = EntityType.STICKY_OBSTACLE;
-	public var _type 		: ObsctaleType;
+	public var entityType 	: EntityType;
+	public var shape 		: ObstacleShape;
 
-	public function new(X:Float=0, Y:Float=0, type : ObsctaleType) 
+	public function new(X:Float=0, Y:Float=0, ?entityType:EntityType, ?shape:ObstacleShape) 
 	{
 		super(X, Y);
-		_type = type;
+		
+		if (entityType != null) {
+			this.entityType = entityType;
+		} else {
+			this.entityType = EntityType.STICKY_OBSTACLE;
+		}
+		
+		if (shape != null) {
+			this.shape = shape;
+		} else {
+			this.shape = ObstacleShape.BLOCK;
+		}
+		
 		set_physicsEnabled(true);
 		
 		body.userData.parent = this;
 		body.userData.entityType = entityType;
 		
-		switch (type) 
-		{
-			case ObsctaleType.ANGLE:
+		switch (shape) {
+			case ObstacleShape.BLOCK:
+				loadGraphic(AssetsImages.obstacle__png, false, 32, 32);
+				createRectangularBody(32, 32);	
+				
+			case ObstacleShape.ANGLE:
 				loadGraphic(AssetsImages.obstacleAngle__png, false, 32, 32);
 				var array = new Array<Vec2>();
 				array.push(new Vec2( 16, -16));
@@ -32,22 +47,18 @@ class Obstacle extends FlxNapeSprite
 				array.push(new Vec2(-16,  16));
 				body.shapes.clear();
 				body.shapes.add(new Polygon(array));
-				
-			case ObsctaleType.BLOCK:
-				loadGraphic(AssetsImages.obstacle__png, false, 32, 32);
-				createRectangularBody(32, 32);	
 			
-			case ObsctaleType.HALF_HORIZONTAL:
+			case ObstacleShape.HALF_HORIZONTAL:
 				loadGraphic(AssetsImages.obstaclehalfH__png, false, 32, 32);
 				var array = new Array<Vec2>();
-				array.push(new Vec2(-16,   0));
-				array.push(new Vec2( 16,   0));
-				array.push(new Vec2( 16,  16));
-				array.push(new Vec2(-16,  16));
+				array.push(new Vec2(-16,  0));
+				array.push(new Vec2( 16,  0));
+				array.push(new Vec2( 16, 16));
+				array.push(new Vec2(-16, 16));
 				body.shapes.clear();
 				body.shapes.add(new Polygon(array));
 				
-			case ObsctaleType.HALF_VERTICAL:
+			case ObstacleShape.HALF_VERTICAL:
 				loadGraphic(AssetsImages.obstaclehalfV__png, false, 32, 32);
 				var array = new Array<Vec2>();
 				array.push(new Vec2(-16, -16));

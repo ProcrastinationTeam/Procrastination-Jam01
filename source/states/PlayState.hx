@@ -5,7 +5,7 @@ import entities.Player;
 import entities.Projectile;
 import entities.Target;
 import enums.EntityType;
-import enums.ObsctaleType;
+import enums.ObsctaleShape;
 import enums.ProjectileState;
 import enums.TargetType;
 import flixel.FlxSprite;
@@ -156,22 +156,19 @@ class PlayState extends FlxState
 		
 		for (i in 0...10) {
 			var r = FlxG.random.int(0, 3);
-			var type = null;
+			var shape = null;
 			switch (r) {
 				case 0:
-					 type = ObsctaleType.ANGLE;
+					shape = ObstacleShape.ANGLE;
 				case 1:
-					 type = ObsctaleType.BLOCK;
+					shape = ObstacleShape.BLOCK;
 				case 2:
-					 type = ObsctaleType.HALF_HORIZONTAL;
+					shape = ObstacleShape.HALF_HORIZONTAL;
 				case 3:
-					type = ObsctaleType.HALF_VERTICAL;
-				default:
-					
+					shape = ObstacleShape.HALF_VERTICAL;
 			}
 			
-			var obstacle = new entities.Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), type);
-			
+			var obstacle = new Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), EntityType.STICKY_OBSTACLE, shape);
 			obstacles.add(obstacle);
 		}
 		
@@ -448,19 +445,12 @@ class PlayState extends FlxState
 					
 				case EntityType.STICKY_OBSTACLE:
 					var obstacle:Obstacle = callback.int2.userData.parent;
-					onProjectileCollidesWithObstacle(currentProjectile, obstacle);
+					onProjectileCollidesWithStickyObstacle(currentProjectile, obstacle);
 					
 				case EntityType.BOUNCY_OBSTACLE:
-					// Not supported yet
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
-					trace('ALERT');
+					var obstacle:Obstacle = callback.int2.userData.parent;
+					onProjectileCollidesWithBouncyObstacle(currentProjectile, obstacle);
+					
 				case EntityType.PROJECTILE: 
 					// MDR no way
 					trace('ALERT');
@@ -512,9 +502,13 @@ class PlayState extends FlxState
 		}
 	}
 	
-	public function onProjectileCollidesWithObstacle(currentProjectile:Projectile, obstacle:Obstacle) {
+	public function onProjectileCollidesWithStickyObstacle(currentProjectile:Projectile, obstacle:Obstacle) {
 		projectile.body.velocity.setxy(0, 0);
 		projectile.state = ON_TARGET;
+	}
+	
+	public function onProjectileCollidesWithBouncyObstacle(currentProjectile:Projectile, obstacle:Obstacle) {
+		// Do nothing ?
 	}
 	
 	public function projectileOutOfScreenCallback() {
