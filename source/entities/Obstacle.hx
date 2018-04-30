@@ -1,24 +1,26 @@
-package;
+package entities;
 
+import enums.ObsctaleType;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import nape.geom.Vec2;
 import nape.phys.BodyType;
 import nape.shape.Polygon;
+import enums.EntityType;
 
-/**
- * ...
- * @author LeRyokan
- */
 class Obstacle extends FlxNapeSprite 
 {
-	public var _type : ObsctaleType;
+	public var entityType 	: EntityType		 = EntityType.STICKY_OBSTACLE;
+	public var _type 		: ObsctaleType;
 
 	public function new(X:Float=0, Y:Float=0, type : ObsctaleType) 
 	{
 		super(X, Y);
 		_type = type;
 		set_physicsEnabled(true);
+		
+		body.userData.parent = this;
+		body.userData.entityType = entityType;
 		
 		switch (type) 
 		{
@@ -34,7 +36,6 @@ class Obstacle extends FlxNapeSprite
 			case ObsctaleType.BLOCK:
 				loadGraphic(AssetsImages.obstacle__png, false, 32, 32);
 				createRectangularBody(32, 32);	
-
 			
 			case ObsctaleType.HALF_HORIZONTAL:
 				loadGraphic(AssetsImages.obstaclehalfH__png, false, 32, 32);

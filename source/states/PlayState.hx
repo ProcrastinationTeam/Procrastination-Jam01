@@ -1,5 +1,13 @@
 package states;
 
+import entities.Obstacle;
+import entities.Player;
+import entities.Projectile;
+import entities.Target;
+import enums.EntityType;
+import enums.ObsctaleType;
+import enums.ProjectileState;
+import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
@@ -37,11 +45,11 @@ class PlayState extends FlxState
 	public var islandSprite 				: FlxSprite;
 	
 	//
-	public var player 						: Player;
+	public var player 						: entities.Player;
 	public var playerTarget					: FlxPoint 					= new FlxPoint();
 	public var playerCrosshair				: FlxSprite;
 	
-	public var projectile	 				: Projectile;
+	public var projectile	 				: entities.Projectile;
 	public var projectileTrail				: Trail;
 	
 	public var projectileSprite				: FlxSprite;
@@ -62,10 +70,10 @@ class PlayState extends FlxState
 	public var radius 						: Float;
 	
 	//
-	public var targets 						: FlxTypedGroup<Target> 	= new FlxTypedGroup<Target>();
+	public var targets 						: FlxTypedGroup<entities.Target> 	= new FlxTypedGroup<entities.Target>();
 	public var targetsHitarea				: FlxSpriteGroup 			= new FlxSpriteGroup();
 
-	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
+	public var obstacles 					: FlxTypedGroup<entities.Obstacle> 	= new FlxTypedGroup<entities.Obstacle>();
 
 	// UI
 	public var endText 						: FlxText;
@@ -114,7 +122,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png);
+		player = new entities.Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -123,7 +131,7 @@ class PlayState extends FlxState
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
-		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
+		projectile = new entities.Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		projectileTrail.start(false, 0.1);
 		
@@ -140,10 +148,10 @@ class PlayState extends FlxState
 		rightVector = FlxVector.get(radius, 0);
 		
 		for (i in 0...10) {
-			var target = new Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
+			var target = new entities.Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
 			target.body.userData.parent = target;
 			targets.add(target);
-			targetsHitarea.add(target.hitArea);
+			//targetsHitarea.add(target.hitArea);
 		}
 		
 		for (i in 0...10) {
@@ -162,7 +170,7 @@ class PlayState extends FlxState
 					
 			}
 			
-			var obstacle = new Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), type);
+			var obstacle = new entities.Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), type);
 			
 			obstacles.add(obstacle);
 		}
@@ -380,19 +388,13 @@ class PlayState extends FlxState
 		vectorProjectileToPlayer.put();
 		vectorProjectileSpriteToPlayer.put();
 		
-		#if debug
-		debugCanvas.fill(FlxColor.TRANSPARENT);
-		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
-		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
-		#end
-		
 		for (target in targets) {
 			target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
 		}
 		
-		for (targetHitArea in targetsHitarea) {
-			targetHitArea.angularVelocity = instantRotation * 60;
-		}
+		//for (targetHitArea in targetsHitarea) {
+			//targetHitArea.angularVelocity = instantRotation * 60;
+		//}
 		
 		if (targets.length == 0 && !gameEnd) {
 			trace("You win");
@@ -403,6 +405,12 @@ class PlayState extends FlxState
 			
 			new FlxTimer().start(3, loadNextState, 1);
 		}
+		
+		#if debug
+		debugCanvas.fill(FlxColor.TRANSPARENT);
+		debugCanvas.drawLine(center.x, center.y, center.x + rightVector.x, center.y + rightVector.y, { color: FlxColor.RED, thickness: 2 });
+		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
+		#end
 	}
 	
 	public function ActionChangeRotationDirection() {
@@ -428,41 +436,86 @@ class PlayState extends FlxState
 	}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
-		if (callback.int2.userData.type != null) {
-			
-			var projectileBody	: Body 			= callback.int1.castBody;
-			var targetBody		: Body 			= callback.int2.castBody;
-			var target			: Target 		= callback.int2.userData.parent;
-			var type			: TargetType 	= callback.int2.userData.type;
-			
-			var centerProjectileP : FlxPoint = new FlxPoint(projectileBody.position.x, projectileBody.position.y);
-			var centerTargetP : FlxPoint = new FlxPoint(targetBody.position.x, targetBody.position.y);
-			
-			var targetRotation = FlxAngle.asDegrees(targetBody.rotation);
-			if (targetRotation < 0) {
-				targetRotation += 360;
+		
+		var currentProjectile	: Projectile	= callback.int1.userData.parent;
+		var entityType 			: EntityType 	= callback.int2.userData.entityType;
+		
+		if (entityType != null) {
+			switch(entityType) {
+				case EntityType.TARGET:
+					var target:Target = callback.int2.userData.parent;
+					onProjectileCollidesWithTarget(currentProjectile, target);
+					
+				case EntityType.STICKY_OBSTACLE:
+					var obstacle:Obstacle = callback.int2.userData.parent;
+					onProjectileCollidesWithObstacle(currentProjectile, obstacle);
+					
+				case EntityType.BOUNCY_OBSTACLE:
+					// Not supported yet
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+				case EntityType.PROJECTILE: 
+					// MDR no way
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
+					trace('ALERT');
 			}
-			var vectorTargetToProjectile = FlxVector.get(centerProjectileP.x - centerTargetP.x, centerProjectileP.y - centerTargetP.y);
-			var vectorTargetLookingAt = FlxVector.get(0, 1).rotateByDegrees(targetRotation);
-			
-			var collisionAngle = vectorTargetLookingAt.degreesBetween(vectorTargetToProjectile);
-			
-			if (type == TargetType.FIXED) {
-				if (collisionAngle > 150 && collisionAngle < 210) {
-					target.kill();
-					targets.remove(target, true);
-					targetsHitarea.remove(target.hitArea, true);
-				}
-			}
-			
-			projectile.body.velocity.setxy(0, 0);
-			projectile.state = ON_TARGET;
 		}
 	}
 	
-	//public targetSpawner(): Void {
+	public function onProjectileCollidesWithTarget(currentProjectile:Projectile, target:Target) {
+		//// Hit area
+		//var centerProjectileP 	: FlxPoint 		= new FlxPoint(currentProjectile.body.position.x, currentProjectile.body.position.y);
+		//var centerTargetP 		: FlxPoint 		= new FlxPoint(target.body.position.x, target.body.position.y);
 		//
-	//}
+		//var targetRotation = FlxAngle.asDegrees(target.body.rotation);
+		//if (targetRotation < 0) {
+			//targetRotation += 360;
+		//}
+		//var vectorTargetToProjectile = FlxVector.get(centerProjectileP.x - centerTargetP.x, centerProjectileP.y - centerTargetP.y);
+		//var vectorTargetLookingAt = FlxVector.get(0, 1).rotateByDegrees(targetRotation);
+		//
+		//var collisionAngle = vectorTargetLookingAt.degreesBetween(vectorTargetToProjectile);
+		//
+		//if (target.type == TargetType.FIXED) {
+			//if (collisionAngle > 150 && collisionAngle < 210) {
+				//target.kill();
+				//targets.remove(target, true);
+				//targetsHitarea.remove(target.hitArea, true);
+			//}
+		//}
+		
+		if (currentProjectile.state == ProjectileState.MOVING_TOWARDS_TARGET) {
+			//projectile.body.velocity.setxy(0, 0);
+			//projectile.state = ON_TARGET;
+			currentProjectile.setPosition(FlxG.width / 2, -100);
+			currentProjectile.body.velocity.setxy(0, 0);
+			projectileOutOfScreenCallback();
+		} else if (currentProjectile.state == MOVING_TOWARDS_PLAYER) {
+			target.kill();
+			targets.remove(target, true);
+		} else {
+			// never ?
+		}
+	}
+	
+	public function onProjectileCollidesWithObstacle(currentProjectile:Projectile, obstacle:Obstacle) {
+		projectile.body.velocity.setxy(0, 0);
+		projectile.state = ON_TARGET;
+	}
 	
 	public function projectileOutOfScreenCallback() {
 		projectile.state = OFF_SCREEN;

@@ -1,6 +1,0 @@
-package;
-
-enum TargetType 
-{
-	FIXED;
-}
