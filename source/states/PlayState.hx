@@ -79,6 +79,8 @@ class PlayState extends FlxState
 	public var endText 						: FlxText;
 	public var pauseText 					: FlxText;
 	public var scoreText 					: FlxText;
+	public var healthText 					: FlxText;
+	public var lifeIcons					: FlxSpriteGroup = new FlxSpriteGroup();
 
 	//
 	public var CB_BULLET					: CbType 					= new CbType();
@@ -102,13 +104,26 @@ class PlayState extends FlxState
 		background = new FlxSprite(0, 0, AssetsImages.background__png);
 		add(background);
 		
-		pauseText = new FlxText(0, 0, 0, "      PAUSE \n Resume : [P] ", 24);
+		pauseText = new FlxText(0, 10, 0, "      PAUSE \n Resume : [P] ", 24);
 		pauseText.setPosition(FlxG.width / 2 - (pauseText.width / 2), FlxG.height / 3);
 		pauseText.set_visible(false);
 		
-		scoreText = new FlxText(0, 0, 0, "Score : 0", 24);
-		scoreText.setPosition(FlxG.width - 250, 10);
+		scoreText = new FlxText(900, 0, 0, "Score : 0", 24);
 		scoreText.set_visible(true);
+		FlxTween.tween(scoreText, {x: FlxG.width - 250}, 0.3);
+		
+		
+		
+		healthText = new FlxText(-100, 0, 0, "Life", 24);
+		healthText.set_visible(true);
+		FlxTween.tween(healthText, {x: 150}, 0.3);
+		
+		
+		endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
+		endText.setPosition(FlxG.width / 2 - (endText.width / 2), FlxG.height / 2 - (endText.height / 2));
+		endText.set_visible(false);
+		
+		
 		
 		railSprite = new FlxSprite();
 		railSprite.screenCenter();
@@ -189,6 +204,9 @@ class PlayState extends FlxState
 		add(playerCrosshair);
 		add(pauseText);
 		add(scoreText);
+		add(healthText);
+		add(player.lifeIcons);
+		add(endText);
 		
 		FlxNapeSpace.space.listeners.add(new InteractionListener(
 			CbEvent.BEGIN, 
@@ -211,11 +229,14 @@ class PlayState extends FlxState
 		
 		elapsedTime += elapsed;
 		
+		
+		
 		scoreText.text = "SCORE : " + player.score;
 		
 		// If the projectile JUST LEFT the screen, bring int back after a delay
 		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
 			projectileOutOfScreenCallback();
+			player.LooseLife();
 		}
 		
 		#if debug
@@ -390,12 +411,22 @@ class PlayState extends FlxState
 			//targetHitArea.angularVelocity = instantRotation * 60;
 		//}
 		
+		// YOU LOOSE
+		if (player.life <= 0)
+		{
+			trace("You Loose");
+			gameEnd = true;
+			endText.text = "You Loose !";
+			endText.set_visible(true);
+			
+			new FlxTimer().start(3, loadNextState, 1);
+		}
+		
 		if (targets.length == 0 && !gameEnd) {
 			trace("You win");
 			gameEnd = true;
-			endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
-			endText.setPosition(FlxG.width / 2 - (endText.width / 2), FlxG.height / 2 - (endText.height / 2));
-			add(endText);	
+			endText.text = "You Win !";
+			endText.set_visible(true);
 			
 			new FlxTimer().start(3, loadNextState, 1);
 		}
@@ -500,6 +531,7 @@ class PlayState extends FlxState
 		} else if (currentProjectile.state == MOVING_TOWARDS_PLAYER) {
 			target.kill();
 			targets.remove(target, true);
+			player.addScore(100);
 		} else {
 			// never ?
 		}
