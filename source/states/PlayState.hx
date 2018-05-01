@@ -11,6 +11,7 @@ import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
+import flixel.addons.effects.FlxTrail;
 import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
@@ -50,6 +51,7 @@ class PlayState extends FlxState
 	public var playerCrosshair				: FlxSprite;
 	
 	public var projectile	 				: Projectile;
+	public var projectileOrbitPosition		: FlxPoint					= new FlxPoint();
 	public var projectileTrail				: Trail;
 	
 	public var projectileSprite				: FlxSprite;
@@ -57,7 +59,7 @@ class PlayState extends FlxState
 	
 	//
 	public var debugCanvas 					: FlxSprite;
-	public var useDebugControls 			: Bool						= false;
+	public var useManualControls 			: Bool						= true;
 	
 	//
 	public var elapsedTime 					: Float 					= 0;
@@ -87,6 +89,7 @@ class PlayState extends FlxState
 	
 	// Bordel
 	public var previousMousePosition		: FlxPoint					= new FlxPoint();
+	public var slowMoTimer					: FlxTimer;
 	
 	override public function create():Void {
 		super.create();
@@ -148,6 +151,7 @@ class PlayState extends FlxState
 		
 		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
+		//projectileTrail = new FlxTrail(projectile, null, 100, 0, 0.4, 0.02);
 		projectileTrail.start(false, 0.1);
 		
 		projectileSprite = new FlxSprite( -100, -100, AssetsImages.disc__png);
@@ -241,13 +245,13 @@ class PlayState extends FlxState
 		#if debug
 		if (FlxG.keys.pressed.SHIFT) {
 			if (FlxG.keys.justPressed.T) {
-				useDebugControls = !useDebugControls;
+				useManualControls = !useManualControls;
 				player.rpm = Tweaking.playerRpmBase;
 				
-				if (useDebugControls) {
-					// On vient de passer en mode debug
+				if (useManualControls) {
+					// On repasse en mode manuel
 				} else {
-					// On repasse en mode normal
+					// On vient de passer en mode auto
 				}
 			}
 		}
@@ -288,8 +292,29 @@ class PlayState extends FlxState
 		}
 		
 		var instantRotation:Float = 0;
-		if (!useDebugControls) {
-			// METHOD 1: normal
+		if (useManualControls) {
+			// METHOD 1: manual
+			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
+				if (player.rpm < Tweaking.playerRpmBase) {
+					player.rpm++;
+				}
+			} else if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
+				if (player.rpm > -Tweaking.playerRpmBase) {
+					player.rpm--;
+				}
+			} else {
+				if (Math.abs(player.rpm) < 0.5) {
+					player.rpm = 0;
+				} else if (player.rpm > 0) {
+					player.rpm -= elapsed * 100;
+				} else if (player.rpm < 0) {
+					player.rpm += elapsed * 100;
+				}
+			}
+			
+			instantRotation = elapsed * 360 * player.rpm / 60;
+		} else {
+			// METHOD 2: auto
 			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.B)) {
 				ActionChangeRotationDirection();
 			}
@@ -322,35 +347,14 @@ class PlayState extends FlxState
 				case FAST:
 					instantRotation *= 1.25;
 			}
-		} else {
-			// METHOD 2: debug
-			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
-				if (player.rpm < Tweaking.playerRpmBase) {
-					player.rpm++;
-				}
-			} else if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
-				if (player.rpm > -Tweaking.playerRpmBase) {
-					player.rpm--;
-				}
-			} else {
-				if (Math.abs(player.rpm) < 0.5) {
-					player.rpm = 0;
-				} else if (player.rpm > 0) {
-					player.rpm -= elapsed * 100;
-				} else if (player.rpm < 0) {
-					player.rpm += elapsed * 100;
-				}
-			}
-			
-			instantRotation = elapsed * 360 * player.rpm / 60;
 		}
 		
 		rightVector.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x, center.y + rightVector.y);
 		
-		var vectorProjectileToTarget:FlxVector = FlxVector.get(
-													playerTarget.x - (projectile.x + projectile.width / 2),
-													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
+		var vectorPlayerToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - player.x,
+													playerTarget.y - player.y).normalize();
 													
 		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
 													player.x - (projectile.x + projectile.width / 2), 
@@ -359,11 +363,13 @@ class PlayState extends FlxState
 		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
 													player.x - (projectileSprite.x + projectileSprite.width / 2), 
 													player.y - (projectileSprite.y + projectileSprite.height / 2)).normalize();
-			
+													
+		//projectileOrbitPosition.set(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
+		
 		switch(projectile.state) {
 			case ON_PLAYER:
 				// CONTINUE FOLLOWING PLAYER!
-				projectile.setPosition(player.x, player.y);
+				projectile.setPosition(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
 			case MOVING_TOWARDS_TARGET:
 				// CONTINUE GOING TO TARGET
 			case MOVING_TOWARDS_PLAYER:
@@ -383,8 +389,14 @@ class PlayState extends FlxState
 					projectile.state = ON_PLAYER;
 					projectileSprite.setPosition( -100, -100);
 					projectileSprite.velocity.set(0, 0);
+					
+					player.LooseLife();
 				}
 		}
+		
+		var vectorProjectileToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - (projectile.x + projectile.width / 2),
+													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
 		
 		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.A)) {
 			switch(projectile.state) {
@@ -432,12 +444,19 @@ class PlayState extends FlxState
 		
 		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
-		debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
-		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		// Line between center and player
+		//debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		
+		// Line between projectile and target
+		if (projectile.state == ProjectileState.ON_PLAYER) {
+			debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		}
+		
+		// line between projectile and player
 		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
-		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
 		#end
 		
+		vectorPlayerToTarget.put();
 		vectorProjectileToTarget.put();
 		vectorProjectileToPlayer.put();
 		vectorProjectileSpriteToPlayer.put();
@@ -531,6 +550,20 @@ class PlayState extends FlxState
 			target.kill();
 			targets.remove(target, true);
 			player.addScore(100);
+			
+			// That swag
+			FlxG.timeScale = 0.05;
+			if (slowMoTimer == null) {
+				slowMoTimer = new FlxTimer().start(0.03, function(_) {
+					FlxG.timeScale = 1;
+				});
+			} else {
+				slowMoTimer.cancel();
+				slowMoTimer.start(0.03, function(_) {
+					FlxG.timeScale = 1;
+				});
+			}
+			//
 		} else {
 			// never ?
 		}
@@ -546,8 +579,6 @@ class PlayState extends FlxState
 	}
 	
 	public function projectileOutOfScreenCallback() {
-		player.LooseLife();
-		
 		projectile.state = OFF_SCREEN;
 		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
 			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
