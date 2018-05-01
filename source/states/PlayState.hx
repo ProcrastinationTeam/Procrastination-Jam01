@@ -265,7 +265,7 @@ class PlayState extends FlxState
 		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
 			FlxG.resetGame();
 		} else if (FlxG.keys.justPressed.R) {
-			FlxG.resetState();
+			FlxG.switchState(new PlayState(levelId));
 		}
 		#end
 		
