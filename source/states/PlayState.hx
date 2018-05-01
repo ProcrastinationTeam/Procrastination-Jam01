@@ -235,8 +235,6 @@ class PlayState extends FlxState
 		
 		elapsedTime += elapsed;
 		
-		
-		
 		scoreText.text = "SCORE : " + player.score;
 		
 		// If the projectile JUST LEFT the screen, bring int back after a delay
@@ -301,6 +299,18 @@ class PlayState extends FlxState
 			ActionPauseGame();
 		}
 		
+		if (FlxG.keys.justPressed.SPACE && player.canDash) {
+			player.dashing = true;
+			player.canDash = false;
+			new FlxTimer().start(Tweaking.dashDuration, function(_) {
+				player.dashing = false;
+				
+				new FlxTimer().start(Tweaking.dashCooldown, function(_) {
+					player.canDash = true;
+				});
+			});
+		}
+		
 		var down:Float = 0;
 		var right:Float = 0;
 		var movementVector:FlxVector = FlxVector.get(0, 0);
@@ -327,36 +337,10 @@ class PlayState extends FlxState
 				right = 1;
 			}
 			
-			if (down > 0.01) {
-				if (right > 0.01) {
-					
-				} else if (right < -0.01) {
-					
-				} else {
-					
-				}
-			} else if (down < -0.01) {
-				if (right > 0.01) {
-					
-				} else if (right < -0.01) {
-					
-				} else {
-					
-				}
-			} else {
-				if (right > 0.01) {
-					
-				} else if (right < -0.01) {
-					
-				} else {
-					
-				}
-			}
-			
-			if (Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
+			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
 				right = gamepad.analog.value.LEFT_STICK_X;
 			}
-			if (Math.abs(gamepad.analog.value.LEFT_STICK_Y) > epsilon) {
+			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_Y) > epsilon) {
 				down = gamepad.analog.value.LEFT_STICK_Y;
 			}
 			
@@ -364,12 +348,20 @@ class PlayState extends FlxState
 			var movementVectorLength = movementVector.length;
 			movementVector.normalize();
 			
+			if (Math.abs(right) == 1 && Math.abs(down) == 1) {
+				movementVectorLength = movementVector.length;
+			}
+			
 			// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
 			var angle = Math.atan2( -movementVector.y, movementVector.x) - Math.atan2( -vectorPlayerToCenter.y, vectorPlayerToCenter.x);
 			angle = FlxAngle.wrapAngle(FlxAngle.asDegrees(angle));
 			
-			//player.rpm = FlxMath.remapToRange(angle, -180, 180, -Tweaking.playerRpmBase, Tweaking.playerRpmBase);
-			player.rpm = (angle > 0 ? 1 : -1) * Tweaking.playerRpmBase * movementVectorLength;
+			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.LEFT_SHOULDER)) {
+				//dash();
+			}
+			
+			player.rpm = Tweaking.playerRpmBase * movementVectorLength;
+			player.clockwise = player.dashing ? player.clockwise : (angle > 0 ? true : false);
 			
 			//trace(angle);
 			
@@ -391,7 +383,7 @@ class PlayState extends FlxState
 				//}
 			//}
 			
-			instantRotation = elapsed * 360 * player.rpm / 60;
+			instantRotation = (player.clockwise ? 1 : -1) * (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * elapsed * 360 / 60;
 		} else {
 			// METHOD 2: auto
 			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.B)) {
@@ -417,7 +409,7 @@ class PlayState extends FlxState
 				}
 			}
 				
-			instantRotation = (player.clockwise ? 1 : -1) * elapsed * 360 * player.rpm / 60;
+			instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
 			switch(player.speed) {
 				case SLOW:
 					instantRotation *= 0.75;
@@ -478,7 +470,7 @@ class PlayState extends FlxState
 													playerTarget.x - (projectile.x + projectile.width / 2),
 													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
 		
-		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.RIGHT_SHOULDER)) {
+		if (FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_TRIGGER || gamepad.justPressed.RIGHT_SHOULDER))) {
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
