@@ -68,6 +68,7 @@ class PlayState extends FlxState
 	
 	//
 	public var rightVector 					: FlxVector;
+	public var rightVectorPerpendicular		: FlxVector;
 	public var center 						: FlxPoint;
 	public var radius 						: Float;
 	
@@ -165,6 +166,7 @@ class PlayState extends FlxState
 		debugCanvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
 		
 		rightVector = FlxVector.get(radius, 0);
+		rightVectorPerpendicular = FlxVector.get(0, radius);
 		
 		for (i in 0...10) {
 			var target = new entities.Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
@@ -276,7 +278,15 @@ class PlayState extends FlxState
 		
 		var stickSensitivity = 10;
 		if (gamepad != null) {
-			playerTarget.set(playerTarget.x + gamepad.analog.value.RIGHT_STICK_X * stickSensitivity, playerTarget.y + gamepad.analog.value.RIGHT_STICK_Y * stickSensitivity);
+			// TODO: pour éviter le snapping, mais est ce qu'on veut éviter le snapping ?
+			gamepad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
+			// TODO: monter la deadzone ?
+			gamepad.deadZone = 0.3;
+			var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
+			if (Math.abs(temp.x) > gamepad.deadZone || Math.abs(temp.y) > gamepad.deadZone) {
+				playerTarget.set(player.x + temp.x * 500, player.y + temp.y * 500);
+			}
+			//playerTarget.set(playerTarget.x + gamepad.analog.value.RIGHT_STICK_X * stickSensitivity, playerTarget.y + gamepad.analog.value.RIGHT_STICK_Y * stickSensitivity);
 			//playerCrosshair.setPosition(playerCrosshair.x + gamepad.analog.value.RIGHT_STICK_X, playerCrosshair.y + gamepad.analog.value.RIGHT_STICK_Y);
 		}
 		if (mouseMoved) {
@@ -291,26 +301,95 @@ class PlayState extends FlxState
 			ActionPauseGame();
 		}
 		
+		var down:Float = 0;
+		var right:Float = 0;
+		var movementVector:FlxVector = FlxVector.get(0, 0);
+		
+		var vectorPlayerToCenter:FlxVector = FlxVector.get(
+													center.x - player.x, 
+													center.y - player.y).normalize();
+		
 		var instantRotation:Float = 0;
 		if (useManualControls) {
 			// METHOD 1: manual
-			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
-				if (player.rpm < Tweaking.playerRpmBase) {
-					player.rpm++;
+			
+			var epsilon = 0.01;
+			
+			if (FlxG.keys.pressed.Z) {
+				down = -1;
+			} else if (FlxG.keys.pressed.S) {
+				down = 1;
+			}
+			
+			if (FlxG.keys.pressed.Q) {
+				right = -1;
+			} else if (FlxG.keys.pressed.D) {
+				right = 1;
+			}
+			
+			if (down > 0.01) {
+				if (right > 0.01) {
+					
+				} else if (right < -0.01) {
+					
+				} else {
+					
 				}
-			} else if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
-				if (player.rpm > -Tweaking.playerRpmBase) {
-					player.rpm--;
+			} else if (down < -0.01) {
+				if (right > 0.01) {
+					
+				} else if (right < -0.01) {
+					
+				} else {
+					
 				}
 			} else {
-				if (Math.abs(player.rpm) < 0.5) {
-					player.rpm = 0;
-				} else if (player.rpm > 0) {
-					player.rpm -= elapsed * 100;
-				} else if (player.rpm < 0) {
-					player.rpm += elapsed * 100;
+				if (right > 0.01) {
+					
+				} else if (right < -0.01) {
+					
+				} else {
+					
 				}
 			}
+			
+			if (Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
+				right = gamepad.analog.value.LEFT_STICK_X;
+			}
+			if (Math.abs(gamepad.analog.value.LEFT_STICK_Y) > epsilon) {
+				down = gamepad.analog.value.LEFT_STICK_Y;
+			}
+			
+			movementVector.set(right, down);
+			var movementVectorLength = movementVector.length;
+			movementVector.normalize();
+			
+			// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
+			var angle = Math.atan2( -movementVector.y, movementVector.x) - Math.atan2( -vectorPlayerToCenter.y, vectorPlayerToCenter.x);
+			angle = FlxAngle.wrapAngle(FlxAngle.asDegrees(angle));
+			
+			//player.rpm = FlxMath.remapToRange(angle, -180, 180, -Tweaking.playerRpmBase, Tweaking.playerRpmBase);
+			player.rpm = (angle > 0 ? 1 : -1) * Tweaking.playerRpmBase * movementVectorLength;
+			
+			//trace(angle);
+			
+			//if (FlxG.keys.pressed.H || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
+				//if (player.rpm < Tweaking.playerRpmBase) {
+					//player.rpm++;
+				//}
+			//} else if (FlxG.keys.pressed.F || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
+				//if (player.rpm > -Tweaking.playerRpmBase) {
+					//player.rpm--;
+				//}
+			//} else {
+				//if (Math.abs(player.rpm) < 0.5) {
+					//player.rpm = 0;
+				//} else if (player.rpm > 0) {
+					//player.rpm -= elapsed * 100;
+				//} else if (player.rpm < 0) {
+					//player.rpm += elapsed * 100;
+				//}
+			//}
 			
 			instantRotation = elapsed * 360 * player.rpm / 60;
 		} else {
@@ -350,6 +429,7 @@ class PlayState extends FlxState
 		}
 		
 		rightVector.rotateByDegrees(instantRotation);
+		rightVectorPerpendicular.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x, center.y + rightVector.y);
 		
 		var vectorPlayerToTarget:FlxVector = FlxVector.get(
@@ -398,7 +478,7 @@ class PlayState extends FlxState
 													playerTarget.x - (projectile.x + projectile.width / 2),
 													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
 		
-		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.A)) {
+		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.RIGHT_SHOULDER)) {
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
@@ -411,7 +491,6 @@ class PlayState extends FlxState
 				default:
 					// DO NOTHING!
 			}
-			
 		}
 		
 		for (target in targets) {
@@ -445,7 +524,7 @@ class PlayState extends FlxState
 		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
 		// Line between center and player
-		//debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
 		
 		// Line between projectile and target
 		if (projectile.state == ProjectileState.ON_PLAYER) {
@@ -454,6 +533,14 @@ class PlayState extends FlxState
 		
 		// line between projectile and player
 		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		
+		// Tangent movement line
+		debugCanvas.drawLine(	player.x - rightVectorPerpendicular.x, player.y - rightVectorPerpendicular.y,
+								player.x + rightVectorPerpendicular.x, player.y + rightVectorPerpendicular.y,
+								{ color: FlxColor.RED, thickness: 2 });
+		
+		// Movement direction
+		debugCanvas.drawLine(player.x, player.y, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
 		#end
 		
 		vectorPlayerToTarget.put();
