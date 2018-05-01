@@ -236,7 +236,6 @@ class PlayState extends FlxState
 		// If the projectile JUST LEFT the screen, bring int back after a delay
 		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
 			projectileOutOfScreenCallback();
-			player.LooseLife();
 		}
 		
 		#if debug
@@ -358,8 +357,8 @@ class PlayState extends FlxState
 													player.y - (projectile.y + projectile.height / 2)).normalize();
 													
 		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
-													player.x - (projectile.x + projectile.width / 2), 
-													player.y - (projectile.y + projectile.height / 2)).normalize();
+													player.x - (projectileSprite.x + projectileSprite.width / 2), 
+													player.y - (projectileSprite.y + projectileSprite.height / 2)).normalize();
 			
 		switch(projectile.state) {
 			case ON_PLAYER:
@@ -547,6 +546,8 @@ class PlayState extends FlxState
 	}
 	
 	public function projectileOutOfScreenCallback() {
+		player.LooseLife();
+		
 		projectile.state = OFF_SCREEN;
 		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
 			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
