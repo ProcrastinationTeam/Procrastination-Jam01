@@ -12,7 +12,7 @@ class MenuState extends FlxState
 		super.create();
 		
 		// Go straight to PlayState
-		FlxG.switchState(new PlayState());
+		FlxG.switchState(new PlayState(1));
 	}
 
 	override public function update(elapsed:Float):Void
@@ -21,7 +21,7 @@ class MenuState extends FlxState
 		
 		
 		if (FlxG.mouse.justPressed) {
-			FlxG.switchState(new PlayState());
+			FlxG.switchState(new PlayState(1));
 		}
 		
 		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {

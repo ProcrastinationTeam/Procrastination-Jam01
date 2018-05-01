@@ -37,7 +37,14 @@ class Obstacle extends FlxNapeSprite
 		switch (shape) {
 			case ObstacleShape.BLOCK:
 				loadGraphic(AssetsImages.obstacle__png, false, 32, 32);
-				createRectangularBody(32, 32);	
+				//createRectangularBody(32, 32);	
+				var array = new Array<Vec2>();
+				array.push(new Vec2(-16, -16));
+				array.push(new Vec2( 16, -16));
+				array.push(new Vec2( 16,  16));
+				array.push(new Vec2( -16,  16));
+				body.shapes.clear();
+				body.shapes.add(new Polygon(array));
 				
 			case ObstacleShape.ANGLE:
 				loadGraphic(AssetsImages.obstacleAngle__png, false, 32, 32);

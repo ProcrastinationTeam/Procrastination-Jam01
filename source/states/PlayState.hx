@@ -11,6 +11,7 @@ import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
+import flixel.addons.effects.FlxTrail;
 import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
@@ -52,6 +53,7 @@ class PlayState extends FlxState
 	public var playerCrosshair				: FlxSprite;
 	
 	public var projectile	 				: Projectile;
+	public var projectileOrbitPosition		: FlxPoint					= new FlxPoint();
 	public var projectileTrail				: Trail;
 	
 	public var projectileSprite				: FlxSprite;
@@ -59,7 +61,7 @@ class PlayState extends FlxState
 	
 	//
 	public var debugCanvas 					: FlxSprite;
-	public var useDebugControls 			: Bool						= false;
+	public var useManualControls 			: Bool						= true;
 	
 	//
 	public var elapsedTime 					: Float 					= 0;
@@ -68,6 +70,7 @@ class PlayState extends FlxState
 	
 	//
 	public var rightVector 					: FlxVector;
+	public var rightVectorPerpendicular		: FlxVector;
 	public var center 						: FlxPoint;
 	public var radius 						: Float;
 	
@@ -87,12 +90,22 @@ class PlayState extends FlxState
 	
 	//Tilemap for level design
 	public var tilemap						: FlxTilemap = new FlxTilemap();
-
+	public var levelId						: Int;
+	public var levelPath					: String;
 	//
 	public var CB_BULLET					: CbType 					= new CbType();
 	
 	// Bordel
 	public var previousMousePosition		: FlxPoint					= new FlxPoint();
+	public var slowMoTimer					: FlxTimer;
+	
+	override public function new(levelid:Int):Void {
+		super();
+		levelId = levelid;
+		levelPath = "assets/data/level" + levelId + ".csv";
+		
+	}
+	
 	
 	override public function create():Void {
 		super.create();
@@ -159,6 +172,7 @@ class PlayState extends FlxState
 		
 		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
+		//projectileTrail = new FlxTrail(projectile, null, 100, 0, 0.4, 0.02);
 		projectileTrail.start(false, 0.1);
 		
 		projectileSprite = new FlxSprite( -100, -100, AssetsImages.disc__png);
@@ -172,42 +186,16 @@ class PlayState extends FlxState
 		debugCanvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
 		
 		rightVector = FlxVector.get(radius, 0);
-	
+		rightVectorPerpendicular = FlxVector.get(0, radius);
+
 		//EARLY TILEMAP
-		tilemap.loadMapFromCSV("assets/data/maps.csv", "assets/images/tiles.png", 32, 32,FlxTilemapAutoTiling.OFF);
-		tilemap.screenCenter();
-		trace("XY: " + tilemap.x + "," + tilemap.y);
-		trace("XY: " + tilemap.width + "," + tilemap.height);
+		createLevel(levelPath);
 
 		
-		for (i in 0...10) {
-			var target = new entities.Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
-			target.body.userData.parent = target;
-			targets.add(target);
-			//targetsHitarea.add(target.hitArea);
-		}
-		
-		for (i in 0...10) {
-			var r = FlxG.random.int(0, 3);
-			var shape = null;
-			switch (r) {
-				case 0:
-					shape = ObstacleShape.ANGLE;
-				case 1:
-					shape = ObstacleShape.BLOCK;
-				case 2:
-					shape = ObstacleShape.HALF_HORIZONTAL;
-				case 3:
-					shape = ObstacleShape.HALF_VERTICAL;
-			}
-			
-			var obstacle = new Obstacle(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), EntityType.STICKY_OBSTACLE, shape);
-			obstacles.add(obstacle);
-		}
 		
 		add(railSprite);
 		add(islandSprite);
-		add(tilemap);
+	//	add(tilemap);
 		add(obstacles);
 		add(targets);
 		add(targetsHitarea);
@@ -247,31 +235,29 @@ class PlayState extends FlxState
 		FlxG.mouse.visible = false;
 	}
 
+	
 	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
 		
 		elapsedTime += elapsed;
 		
-		
-		
-		scoreText.text = "SCORE : " + player.score;
+		scoreText.text = "SCORE : " + Reg.score;
 		
 		// If the projectile JUST LEFT the screen, bring int back after a delay
 		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
 			projectileOutOfScreenCallback();
-			player.LooseLife();
 		}
 		
 		#if debug
 		if (FlxG.keys.pressed.SHIFT) {
 			if (FlxG.keys.justPressed.T) {
-				useDebugControls = !useDebugControls;
+				useManualControls = !useManualControls;
 				player.rpm = Tweaking.playerRpmBase;
 				
-				if (useDebugControls) {
-					// On vient de passer en mode debug
+				if (useManualControls) {
+					// On repasse en mode manuel
 				} else {
-					// On repasse en mode normal
+					// On vient de passer en mode auto
 				}
 			}
 		}
@@ -296,7 +282,15 @@ class PlayState extends FlxState
 		
 		var stickSensitivity = 10;
 		if (gamepad != null) {
-			playerTarget.set(playerTarget.x + gamepad.analog.value.RIGHT_STICK_X * stickSensitivity, playerTarget.y + gamepad.analog.value.RIGHT_STICK_Y * stickSensitivity);
+			// TODO: pour éviter le snapping, mais est ce qu'on veut éviter le snapping ?
+			gamepad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
+			// TODO: monter la deadzone ?
+			gamepad.deadZone = 0.3;
+			var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
+			if (Math.abs(temp.x) > gamepad.deadZone || Math.abs(temp.y) > gamepad.deadZone) {
+				playerTarget.set(player.x + temp.x * 500, player.y + temp.y * 500);
+			}
+			//playerTarget.set(playerTarget.x + gamepad.analog.value.RIGHT_STICK_X * stickSensitivity, playerTarget.y + gamepad.analog.value.RIGHT_STICK_Y * stickSensitivity);
 			//playerCrosshair.setPosition(playerCrosshair.x + gamepad.analog.value.RIGHT_STICK_X, playerCrosshair.y + gamepad.analog.value.RIGHT_STICK_Y);
 		}
 		if (mouseMoved) {
@@ -311,9 +305,93 @@ class PlayState extends FlxState
 			ActionPauseGame();
 		}
 		
+		if (FlxG.keys.justPressed.SPACE && player.canDash) {
+			player.dashing = true;
+			player.canDash = false;
+			new FlxTimer().start(Tweaking.dashDuration, function(_) {
+				player.dashing = false;
+				
+				new FlxTimer().start(Tweaking.dashCooldown, function(_) {
+					player.canDash = true;
+				});
+			});
+		}
+		
+		var down:Float = 0;
+		var right:Float = 0;
+		var movementVector:FlxVector = FlxVector.get(0, 0);
+		
+		var vectorPlayerToCenter:FlxVector = FlxVector.get(
+													center.x - player.x, 
+													center.y - player.y).normalize();
+		
 		var instantRotation:Float = 0;
-		if (!useDebugControls) {
-			// METHOD 1: normal
+		if (useManualControls) {
+			// METHOD 1: manual
+			
+			var epsilon = 0.01;
+			
+			if (FlxG.keys.pressed.Z) {
+				down = -1;
+			} else if (FlxG.keys.pressed.S) {
+				down = 1;
+			}
+			
+			if (FlxG.keys.pressed.Q) {
+				right = -1;
+			} else if (FlxG.keys.pressed.D) {
+				right = 1;
+			}
+			
+			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
+				right = gamepad.analog.value.LEFT_STICK_X;
+			}
+			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_Y) > epsilon) {
+				down = gamepad.analog.value.LEFT_STICK_Y;
+			}
+			
+			movementVector.set(right, down);
+			var movementVectorLength = movementVector.length;
+			movementVector.normalize();
+			
+			if (Math.abs(right) == 1 && Math.abs(down) == 1) {
+				movementVectorLength = movementVector.length;
+			}
+			
+			// http://www.euclideanspace.com/maths/algebra/vectors/angleBetween/index.htm
+			var angle = Math.atan2( -movementVector.y, movementVector.x) - Math.atan2( -vectorPlayerToCenter.y, vectorPlayerToCenter.x);
+			angle = FlxAngle.wrapAngle(FlxAngle.asDegrees(angle));
+			
+			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.LEFT_SHOULDER)) {
+				//dash();
+			}
+			
+			player.rpm = Tweaking.playerRpmBase * movementVectorLength;
+			player.clockwise = player.dashing ? player.clockwise : (angle > 0 ? true : false);
+			
+			//trace(angle);
+			
+			//if (FlxG.keys.pressed.H || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
+				//if (player.rpm < Tweaking.playerRpmBase) {
+					//player.rpm++;
+				//}
+			//} else if (FlxG.keys.pressed.F || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
+				//if (player.rpm > -Tweaking.playerRpmBase) {
+					//player.rpm--;
+				//}
+			//} else {
+				//if (Math.abs(player.rpm) < 0.5) {
+					//player.rpm = 0;
+				//} else if (player.rpm > 0) {
+					//player.rpm -= elapsed * 100;
+				//} else if (player.rpm < 0) {
+					//player.rpm += elapsed * 100;
+				//}
+			//}
+			
+			instantRotation = (player.clockwise ? 1 : -1) * (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * elapsed * 360 / 60;
+		} else {
+			// METHOD 2: auto
 			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.B)) {
 				ActionChangeRotationDirection();
 			}
@@ -337,7 +415,7 @@ class PlayState extends FlxState
 				}
 			}
 				
-			instantRotation = (player.clockwise ? 1 : -1) * elapsed * 360 * player.rpm / 60;
+			instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
 			switch(player.speed) {
 				case SLOW:
 					instantRotation *= 0.75;
@@ -346,48 +424,30 @@ class PlayState extends FlxState
 				case FAST:
 					instantRotation *= 1.25;
 			}
-		} else {
-			// METHOD 2: debug
-			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
-				if (player.rpm < Tweaking.playerRpmBase) {
-					player.rpm++;
-				}
-			} else if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.pressed.LEFT_SHOULDER)) {
-				if (player.rpm > -Tweaking.playerRpmBase) {
-					player.rpm--;
-				}
-			} else {
-				if (Math.abs(player.rpm) < 0.5) {
-					player.rpm = 0;
-				} else if (player.rpm > 0) {
-					player.rpm -= elapsed * 100;
-				} else if (player.rpm < 0) {
-					player.rpm += elapsed * 100;
-				}
-			}
-			
-			instantRotation = elapsed * 360 * player.rpm / 60;
 		}
 		
 		rightVector.rotateByDegrees(instantRotation);
+		rightVectorPerpendicular.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x, center.y + rightVector.y);
 		
-		var vectorProjectileToTarget:FlxVector = FlxVector.get(
-													playerTarget.x - (projectile.x + projectile.width / 2),
-													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
+		var vectorPlayerToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - player.x,
+													playerTarget.y - player.y).normalize();
 													
 		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
 													player.x - (projectile.x + projectile.width / 2), 
 													player.y - (projectile.y + projectile.height / 2)).normalize();
 													
 		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
-													player.x - (projectile.x + projectile.width / 2), 
-													player.y - (projectile.y + projectile.height / 2)).normalize();
-			
+													player.x - (projectileSprite.x + projectileSprite.width / 2), 
+													player.y - (projectileSprite.y + projectileSprite.height / 2)).normalize();
+													
+		//projectileOrbitPosition.set(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
+		
 		switch(projectile.state) {
 			case ON_PLAYER:
 				// CONTINUE FOLLOWING PLAYER!
-				projectile.setPosition(player.x, player.y);
+				projectile.setPosition(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
 			case MOVING_TOWARDS_TARGET:
 				// CONTINUE GOING TO TARGET
 			case MOVING_TOWARDS_PLAYER:
@@ -407,10 +467,16 @@ class PlayState extends FlxState
 					projectile.state = ON_PLAYER;
 					projectileSprite.setPosition( -100, -100);
 					projectileSprite.velocity.set(0, 0);
+					
+					player.LooseLife();
 				}
 		}
 		
-		if (FlxG.mouse.justPressed || (gamepad != null && gamepad.justPressed.A)) {
+		var vectorProjectileToTarget:FlxVector = FlxVector.get(
+													playerTarget.x - (projectile.x + projectile.width / 2),
+													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
+		
+		if (FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_TRIGGER || gamepad.justPressed.RIGHT_SHOULDER))) {
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
@@ -423,7 +489,6 @@ class PlayState extends FlxState
 				default:
 					// DO NOTHING!
 			}
-			
 		}
 		
 		for (target in targets) {
@@ -456,15 +521,76 @@ class PlayState extends FlxState
 		
 		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
+		// Line between center and player
 		debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
-		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		
+		// Line between projectile and target
+		if (projectile.state == ProjectileState.ON_PLAYER) {
+			debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		}
+		
+		// line between projectile and player
 		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
-		//debugCanvas.drawCircle(FlxG.mouse.x, FlxG.mouse.y, 6, FlxColor.TRANSPARENT, { color: FlxColor.RED, thickness: 2 });
+		
+		// Tangent movement line
+		debugCanvas.drawLine(	player.x - rightVectorPerpendicular.x, player.y - rightVectorPerpendicular.y,
+								player.x + rightVectorPerpendicular.x, player.y + rightVectorPerpendicular.y,
+								{ color: FlxColor.RED, thickness: 2 });
+		
+		// Movement direction
+		debugCanvas.drawLine(player.x, player.y, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
 		#end
 		
+		vectorPlayerToTarget.put();
 		vectorProjectileToTarget.put();
 		vectorProjectileToPlayer.put();
 		vectorProjectileSpriteToPlayer.put();
+	}
+	
+	public function createLevel(levelPath : String)
+	{
+		tilemap.loadMapFromCSV(levelPath, "assets/images/tiles.png", 32, 32, FlxTilemapAutoTiling.OFF);
+		var offsetw = 20 + FlxG.width / 2 - tilemap.width / 2;
+		var offseth = 20 + FlxG.height / 2 - tilemap.height / 2;
+		for (y in 0...tilemap.heightInTiles)
+		{
+			for (x in 0...tilemap.widthInTiles)
+			{
+
+				var tileId  = tilemap.getTile(x, y);
+				var obstacleShape = null;
+				trace("ID :" + tilemap.getTile(x, y));
+				switch (tileId) 
+				{
+					case -1:
+					case 0:
+						//obstacleShape = ObstacleShape.BLOCK;
+					case 1:
+						//obstacleShape = ObstacleShape.BLOCK
+					case 2:
+						//obstacleShape = ObstacleShape.BLOCK;
+						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED );
+						target.body.userData.parent = target;
+						targets.add(target);
+						
+						
+					case 3:
+						obstacleShape = ObstacleShape.BLOCK;
+						
+						
+					default:
+						
+				}
+				
+				if (obstacleShape != null)
+				{
+					
+					var obstacle = new Obstacle(offsetw + x * 32, offseth + y * 32, EntityType.STICKY_OBSTACLE, obstacleShape);
+					obstacles.add(obstacle);
+				}
+			}
+		}
+		
 	}
 	
 	public function ActionChangeRotationDirection() {
@@ -473,7 +599,15 @@ class PlayState extends FlxState
 	}
 	
 	public function loadNextState(timer:FlxTimer):Void {
-		FlxG.resetState();
+		if (levelId == 2)
+		{
+			trace("YOU WIN");
+		}
+		else
+		{
+			FlxG.switchState(new PlayState(levelId+1));
+		}
+		
 	}
 	
 	public function ActionPauseGame():Void {
@@ -555,6 +689,20 @@ class PlayState extends FlxState
 			target.kill();
 			targets.remove(target, true);
 			player.addScore(100);
+			
+			// That swag
+			FlxG.timeScale = 0.05;
+			if (slowMoTimer == null) {
+				slowMoTimer = new FlxTimer().start(0.03, function(_) {
+					FlxG.timeScale = 1;
+				});
+			} else {
+				slowMoTimer.cancel();
+				slowMoTimer.start(0.03, function(_) {
+					FlxG.timeScale = 1;
+				});
+			}
+			//
 		} else {
 			// never ?
 		}

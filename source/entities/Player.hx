@@ -7,14 +7,16 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 
 class Player extends FlxSprite 
 {
-	public var score 						: Int 			= 0;
-	
-	public var speed 						: PlayerSpeed 	= PlayerSpeed.MEDIUM;
-	public var rpm 							: Float 		= Tweaking.playerRpmBase;
-	public var clockwise				 	: Bool 			= true;
-	public var life							: Int 			= 3;
-	public var lifeIcons					: FlxSpriteGroup = new FlxSpriteGroup();
-	public var comboMultiplier				: Int = 0;
+		
+	public var comboMultiplier				: Int 				= 0;
+	public var speed 						: PlayerSpeed 		= PlayerSpeed.MEDIUM;
+	public var rpm 							: Float 			= Tweaking.playerRpmBase;
+	public var clockwise				 	: Bool 				= true;
+	public var life							: Int 				= 3;
+	public var lifeIcons					: FlxSpriteGroup 	= new FlxSpriteGroup();
+	public var dashing						: Bool 				= false;
+	public var canDash						: Bool 				= true;
+
 
 	override public function new(?X:Float=0, ?Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) 
 	{
@@ -50,13 +52,13 @@ class Player extends FlxSprite
 	
 	public function addScore(value :Int)
 	{
-		score += value;
+		Reg.score += value;
 	}
 	
 	
 	public function LooseScore(value :Int)
 	{
-		score -= value;
+		Reg.score -= value;
 	}
 	
 }
