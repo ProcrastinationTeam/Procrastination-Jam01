@@ -129,7 +129,7 @@ class PlayState extends FlxState
 		
 		
 		
-		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level 1", 24);
+		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level " + levelId, 24);
 		levelText.set_visible(true);
 		FlxTween.tween(levelText, {x: FlxG.width /2 - levelText.width/2}, 1,{onComplete: tweenOut});
 		
