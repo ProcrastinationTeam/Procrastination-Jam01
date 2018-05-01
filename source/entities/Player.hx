@@ -14,6 +14,7 @@ class Player extends FlxSprite
 	public var clockwise				 	: Bool 			= true;
 	public var life							: Int 			= 3;
 	public var lifeIcons					: FlxSpriteGroup = new FlxSpriteGroup();
+	public var comboMultiplier				: Int = 0;
 
 	override public function new(?X:Float=0, ?Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) 
 	{

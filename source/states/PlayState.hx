@@ -22,6 +22,8 @@ import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
 import flixel.text.FlxText;
+import flixel.tile.FlxBaseTilemap.FlxTilemapAutoTiling;
+import flixel.tile.FlxTilemap;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
@@ -80,7 +82,11 @@ class PlayState extends FlxState
 	public var pauseText 					: FlxText;
 	public var scoreText 					: FlxText;
 	public var healthText 					: FlxText;
+	public var levelText 					: FlxText;
 	public var lifeIcons					: FlxSpriteGroup = new FlxSpriteGroup();
+	
+	//Tilemap for level design
+	public var tilemap						: FlxTilemap = new FlxTilemap();
 
 	//
 	public var CB_BULLET					: CbType 					= new CbType();
@@ -108,10 +114,15 @@ class PlayState extends FlxState
 		pauseText.setPosition(FlxG.width / 2 - (pauseText.width / 2), FlxG.height / 3);
 		pauseText.set_visible(false);
 		
+		
+		
+		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level 1", 24);
+		levelText.set_visible(true);
+		FlxTween.tween(levelText, {x: FlxG.width /2 - levelText.width/2}, 1,{onComplete: tweenOut});
+		
 		scoreText = new FlxText(900, 0, 0, "Score : 0", 24);
 		scoreText.set_visible(true);
 		FlxTween.tween(scoreText, {x: FlxG.width - 250}, 0.3);
-		
 		
 		
 		healthText = new FlxText(-100, 0, 0, "Life", 24);
@@ -161,6 +172,13 @@ class PlayState extends FlxState
 		debugCanvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
 		
 		rightVector = FlxVector.get(radius, 0);
+	
+		//EARLY TILEMAP
+		tilemap.loadMapFromCSV("assets/data/maps.csv", "assets/images/tiles.png", 32, 32,FlxTilemapAutoTiling.OFF);
+		tilemap.screenCenter();
+		trace("XY: " + tilemap.x + "," + tilemap.y);
+		trace("XY: " + tilemap.width + "," + tilemap.height);
+
 		
 		for (i in 0...10) {
 			var target = new entities.Target(center.x + FlxG.random.float( -200, 200), center.y + FlxG.random.float( -200, 200), AssetsImages.target__png, FlxG.random.int(0, 359), i, TargetType.FIXED );
@@ -189,6 +207,7 @@ class PlayState extends FlxState
 		
 		add(railSprite);
 		add(islandSprite);
+		add(tilemap);
 		add(obstacles);
 		add(targets);
 		add(targetsHitarea);
@@ -201,8 +220,12 @@ class PlayState extends FlxState
 		add(projectileSprite);
 		add(projectileSpriteTrail);
 		
+		
+		
+		//ADD UI
 		add(playerCrosshair);
 		add(pauseText);
+		add(levelText);
 		add(scoreText);
 		add(healthText);
 		add(player.lifeIcons);
@@ -552,6 +575,11 @@ class PlayState extends FlxState
 			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
 			projectileSprite.setPosition(projectile.x, projectile.y);
 		});
+	}
+	
+	public function tweenOut(tween : FlxTween) : Void
+	{
+		FlxTween.tween(levelText, {x: 900}, 1);
 	}
 }
 
