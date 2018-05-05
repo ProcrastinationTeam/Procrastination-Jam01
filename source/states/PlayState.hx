@@ -11,6 +11,7 @@ import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
+import flixel.FlxSubState;
 import flixel.addons.effects.FlxTrail;
 import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
@@ -81,6 +82,7 @@ class PlayState extends FlxState
 	public var obstacles 					: FlxTypedGroup<Obstacle> 	= new FlxTypedGroup<Obstacle>();
 
 	// UI
+	public var levelIntroSprite				: FlxSprite;
 	public var endText 						: FlxText;
 	public var pauseText 					: FlxText;
 	public var scoreText 					: FlxText;
@@ -99,6 +101,10 @@ class PlayState extends FlxState
 	public var previousMousePosition		: FlxPoint					= new FlxPoint();
 	public var slowMoTimer					: FlxTimer;
 	
+	//Sub
+	public var substate						:IntroSubState;
+	
+	
 	override public function new(levelid:Int):Void {
 		super();
 		levelId = levelid;
@@ -109,6 +115,8 @@ class PlayState extends FlxState
 	
 	override public function create():Void {
 		super.create();
+		
+		
 		
 		Reg.state = this;
 		
@@ -132,6 +140,13 @@ class PlayState extends FlxState
 		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level " + levelId, 24);
 		levelText.set_visible(true);
 		FlxTween.tween(levelText, {x: FlxG.width /2 - levelText.width/2}, 1,{onComplete: tweenOut});
+		
+		levelIntroSprite = new FlxSprite( -924, FlxG.height / 2 - 15);
+		levelIntroSprite.loadGraphic("assets/images/introSprite.png", true, 924, 64);
+		levelIntroSprite.animation.add("anim", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 3, false);
+		levelIntroSprite.animation.play("anim");
+		FlxTween.tween(levelIntroSprite, {x:FlxG.width / 2 - levelIntroSprite.width / 2}, 1, {onComplete: tweenOutSpr});
+		
 		
 		scoreText = new FlxText(900, 0, 0, "Score : 0", 24);
 		scoreText.set_visible(true);
@@ -188,7 +203,11 @@ class PlayState extends FlxState
 		rightVector = FlxVector.get(radius, 0);
 		rightVectorPerpendicular = FlxVector.get(0, radius);
 
-		//EARLY TILEMAP
+		
+		// CREATION OF SUBSTATES
+		substate = new IntroSubState(FlxColor.TRANSPARENT,levelIntroSprite,levelText);
+		
+		// EARLY TILEMAP
 		createLevel(levelPath);
 
 		
@@ -211,6 +230,7 @@ class PlayState extends FlxState
 		
 		
 		//ADD UI
+		add(levelIntroSprite);
 		add(playerCrosshair);
 		add(pauseText);
 		add(levelText);
@@ -233,6 +253,8 @@ class PlayState extends FlxState
 		#end
 		
 		FlxG.mouse.visible = false;
+		
+		
 	}
 
 	
@@ -727,7 +749,14 @@ class PlayState extends FlxState
 	
 	public function tweenOut(tween : FlxTween) : Void
 	{
-		FlxTween.tween(levelText, {x: 900}, 1);
+		//FlxTween.tween(levelText, {x: 900}, 1);
+	}
+	
+	public function tweenOutSpr(tween : FlxTween) : Void
+	{
+		
+	//	FlxTween.tween(levelIntroSprite, {x: 900}, 4);
+		openSubState(substate);
 	}
 }
 
