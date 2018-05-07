@@ -2,6 +2,7 @@ package enums;
 
 enum EntityType {
 	PROJECTILE;
+	ENEMY_PROJECTILE;
 	TARGET;
 	STICKY_OBSTACLE;
 	BOUNCY_OBSTACLE;

@@ -220,6 +220,11 @@ class PlayState extends FlxState
 	//	add(tilemap);
 		add(obstacles);
 		add(targets);
+		for (t in targets)
+		{
+			add(t.projectiles);
+		}
+		
 		add(targetsHitarea);
 		
 		add(player);
@@ -480,6 +485,7 @@ class PlayState extends FlxState
 				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
 				if (FlxMath.distanceBetween(projectile, player) < 30) {
 					projectile.state = ON_PLAYER;
+					player.shieldUp = true;
 				}
 			case ON_TARGET:
 				// DO NOTHING!
@@ -505,10 +511,12 @@ class PlayState extends FlxState
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
+					player.shieldUp = false;
 					projectile.state = MOVING_TOWARDS_TARGET;
 					projectile.body.velocity.setxy(vectorProjectileToTarget.x * Tweaking.projectileSpeed, vectorProjectileToTarget.y * Tweaking.projectileSpeed);
 				case ON_TARGET:
 					// COME BACK !
+					
 					projectile.state = MOVING_TOWARDS_PLAYER;
 					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
 				default:
@@ -594,7 +602,7 @@ class PlayState extends FlxState
 						//obstacleShape = ObstacleShape.BLOCK
 					case 2:
 						//obstacleShape = ObstacleShape.BLOCK;
-						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED );
+						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED, player );
 						target.body.userData.parent = target;
 						targets.add(target);
 						
@@ -678,6 +686,9 @@ class PlayState extends FlxState
 					trace('ALERT');
 					trace('ALERT');
 					trace('ALERT');
+					
+				case EntityType.ENEMY_PROJECTILE:
+					trace("NOTHING");
 			}
 		}
 	}

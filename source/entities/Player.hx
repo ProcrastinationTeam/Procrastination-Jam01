@@ -16,6 +16,7 @@ class Player extends FlxSprite
 	public var lifeIcons					: FlxSpriteGroup 	= new FlxSpriteGroup();
 	public var dashing						: Bool 				= false;
 	public var canDash						: Bool 				= true;
+	public var shieldUp						: Bool				= true;
 
 
 	override public function new(?X:Float=0, ?Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) 
