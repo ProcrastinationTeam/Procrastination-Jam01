@@ -138,22 +138,25 @@ class PlayState extends FlxState
 		
 		
 		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level " + levelId, 24);
+		levelText.setFormat("assets/images/b.ttf", 36);
 		levelText.set_visible(true);
-		FlxTween.tween(levelText, {x: FlxG.width /2 - levelText.width/2}, 1,{onComplete: tweenOut});
+		FlxTween.tween(levelText, {x: FlxG.width /2 - levelText.width/2}, 0.4,{onComplete: tweenOut});
 		
 		levelIntroSprite = new FlxSprite( -924, FlxG.height / 2 - 15);
 		levelIntroSprite.loadGraphic("assets/images/introSprite.png", true, 924, 64);
 		levelIntroSprite.animation.add("anim", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 3, false);
 		levelIntroSprite.animation.play("anim");
-		FlxTween.tween(levelIntroSprite, {x:FlxG.width / 2 - levelIntroSprite.width / 2}, 1, {onComplete: tweenOutSpr});
+		FlxTween.tween(levelIntroSprite, {x:FlxG.width / 2 - levelIntroSprite.width / 2}, 0.4, {onComplete: tweenOutSpr});
 		
 		
 		scoreText = new FlxText(900, 0, 0, "Score : 0", 24);
+		scoreText.setFormat("assets/images/v.ttf", 36);
 		scoreText.set_visible(true);
 		FlxTween.tween(scoreText, {x: FlxG.width - 250}, 0.3);
 		
 		
-		healthText = new FlxText(-100, 0, 0, "Life", 24);
+		healthText = new FlxText( -100, 0, 0, "Life", 24);
+		healthText.setFormat("assets/images/v.ttf", 36);
 		healthText.set_visible(true);
 		FlxTween.tween(healthText, {x: 150}, 0.3);
 		

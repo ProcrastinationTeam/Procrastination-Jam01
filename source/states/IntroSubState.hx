@@ -35,8 +35,8 @@ class IntroSubState extends FlxSubState
 		super.update(elapsed);
 		if ( FlxG.keys.justPressed.SPACE)
 		{
-			FlxTween.tween(textToTween, {x: 900}, 1);
-			FlxTween.tween(spriteToTween, {x: 900}, 1, {onComplete: endSubstate});
+			FlxTween.tween(textToTween, {x: 900}, 0.4);
+			FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
 		}
 	}
 	
