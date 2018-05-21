@@ -1,6 +1,7 @@
 package enums;
 
 enum EntityType {
+	PLAYER;
 	PROJECTILE;
 	ENEMY_PROJECTILE;
 	TARGET;

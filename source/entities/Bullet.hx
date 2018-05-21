@@ -35,9 +35,9 @@ class Bullet extends FlxNapeSprite
 		{
 			i.sensorEnabled = true;
 		}
-		var yolo = new InteractionFilter(1, -1, 1, -1, 1, 1);
+		var collisionFilter = new InteractionFilter(2, -1, 1, -1, 1, 1);
 		
-		this.body.setShapeFilters(yolo);
+		this.body.setShapeFilters(collisionFilter);
 		//bList = this.body.interactingBodies(InteractionType.SENSOR, -1);
 		
 	}

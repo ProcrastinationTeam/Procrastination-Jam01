@@ -103,6 +103,7 @@ class PlayState extends FlxState
 	
 	//Sub
 	public var substate						:IntroSubState;
+	public var pauseSubstate				:PauseSubState;
 	
 	
 	override public function new(levelid:Int):Void {
@@ -179,7 +180,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new entities.Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png);
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png,false,true);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -188,7 +189,7 @@ class PlayState extends FlxState
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
-		projectile = new Projectile(player.x, player.y, AssetsImages.disc__png);
+		projectile = new Projectile(player.x + player.width/2, player.y + player.height/2, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		//projectileTrail = new FlxTrail(projectile, null, 100, 0, 0.4, 0.02);
 		projectileTrail.start(false, 0.1);
@@ -209,6 +210,7 @@ class PlayState extends FlxState
 		
 		// CREATION OF SUBSTATES
 		substate = new IntroSubState(FlxColor.TRANSPARENT,levelIntroSprite,levelText);
+		
 		
 		// EARLY TILEMAP
 		createLevel(levelPath);
@@ -232,7 +234,7 @@ class PlayState extends FlxState
 		add(projectile);
 		add(projectileTrail);
 		
-		add(projectileSprite);
+		//add(projectileSprite);
 		add(projectileSpriteTrail);
 		
 		
@@ -332,7 +334,16 @@ class PlayState extends FlxState
 		playerCrosshair.angle += elapsed * 50;
 		
 		if (FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START)) {
-			ActionPauseGame();
+			//ActionPauseGame();
+			//if (isGamePaused == false){
+				pauseSubstate = new PauseSubState(FlxColor.BLUE);
+				closeSubState();
+				openSubState(pauseSubstate);
+			//	isGamePaused = true;
+			//}
+			
+			
+			
 		}
 		
 		if (FlxG.keys.justPressed.SPACE && player.canDash) {
@@ -469,8 +480,8 @@ class PlayState extends FlxState
 													player.y - (projectile.y + projectile.height / 2)).normalize();
 													
 		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
-													player.x - (projectileSprite.x + projectileSprite.width / 2), 
-													player.y - (projectileSprite.y + projectileSprite.height / 2)).normalize();
+													player.x + player.width/2 - (projectileSprite.x + projectileSprite.width / 2), 
+													player.y + player.height/2 - (projectileSprite.y + projectileSprite.height / 2)).normalize();
 													
 		//projectileOrbitPosition.set(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
 		
@@ -555,7 +566,7 @@ class PlayState extends FlxState
 		#if debug
 		debugCanvas.fill(FlxColor.TRANSPARENT);
 		// Line between center and player
-		debugCanvas.drawLine(center.x, center.y, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(center.x, center.y, player.x + player.width/2, player.y + player.height/2, { color: FlxColor.RED, thickness: 2 });
 		
 		// Line between projectile and target
 		if (projectile.state == ProjectileState.ON_PLAYER) {
@@ -566,12 +577,12 @@ class PlayState extends FlxState
 		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
 		
 		// Tangent movement line
-		debugCanvas.drawLine(	player.x - rightVectorPerpendicular.x, player.y - rightVectorPerpendicular.y,
-								player.x + rightVectorPerpendicular.x, player.y + rightVectorPerpendicular.y,
+		debugCanvas.drawLine(	player.x + player.width/2 - rightVectorPerpendicular.x, player.y + player.height/2 - rightVectorPerpendicular.y,
+								player.x + player.width/2 + rightVectorPerpendicular.x, player.y + player.height/2 + rightVectorPerpendicular.y,
 								{ color: FlxColor.RED, thickness: 2 });
 		
 		// Movement direction
-		debugCanvas.drawLine(player.x, player.y, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
+		debugCanvas.drawLine(player.x + player.width/2, player.y + player.height/2, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
 		#end
 		
 		vectorPlayerToTarget.put();
@@ -688,6 +699,9 @@ class PlayState extends FlxState
 					trace('ALERT');
 					
 				case EntityType.ENEMY_PROJECTILE:
+					trace("NOTHING");
+					
+				case EntityType.PLAYER:
 					trace("NOTHING");
 			}
 		}
