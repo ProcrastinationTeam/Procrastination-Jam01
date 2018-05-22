@@ -654,18 +654,18 @@ class PlayState extends FlxState
 		
 	}
 	
-	public function ActionPauseGame():Void {
-		isGamePaused = !isGamePaused;
-		
-		if (isGamePaused) {
-			FlxG.timeScale = 0;
-			pauseText.visible = true;
-		}
-		else {
-			FlxG.timeScale = 1;
-			pauseText.visible = false;
-		}
-	}
+	//public function ActionPauseGame():Void {
+		//isGamePaused = !isGamePaused;
+		//
+		//if (isGamePaused) {
+			//FlxG.timeScale = 0;
+			//pauseText.visible = true;
+		//}
+		//else {
+			//FlxG.timeScale = 1;
+			//pauseText.visible = false;
+		//}
+	//}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
 		

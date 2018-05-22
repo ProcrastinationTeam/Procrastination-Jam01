@@ -3,6 +3,7 @@ package states;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
+import flixel.addons.nape.FlxNapeSpace;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
@@ -161,7 +162,8 @@ class PauseSubState extends FlxSubState
 	override public function create():Void 
 	{
 		super.create();
-			_parentState.persistentUpdate = false;
+		_parentState.persistentUpdate = false;
+		FlxG.plugins.get(FlxNapeSpace).active = false;
 	}
 	
 	override public function update(elapsed:Float):Void
@@ -319,7 +321,10 @@ class PauseSubState extends FlxSubState
 		}
 	}
 	
-
+	override public function close():Void {
+		FlxG.plugins.get(FlxNapeSpace).active = true;
+		super.close();
+	}
 	
 	
 }
