@@ -53,6 +53,13 @@ class Target extends FlxNapeSprite
 	
 		cooldown = new FlxTimer();
 		
+		for ( a in body.shapes)
+		{
+			a.filter.collisionMask = 2;
+			a.filter.collisionGroup = 2;
+			a.filter.sensorGroup = 2;
+			a.filter.sensorMask = 2;
+		}
 	}
 	
 	override public function update(elapsed:Float)

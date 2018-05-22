@@ -79,6 +79,16 @@ class Obstacle extends FlxNapeSprite
 				//
 		}
 		
+		
+		for ( a in body.shapes)
+		{
+			//a.sensorEnabled = true;
+			a.filter.collisionMask = 2;
+			a.filter.collisionGroup = 2;
+			a.filter.sensorGroup = 2;
+			a.filter.sensorMask = 2;
+		}
+		
 		body.allowMovement = false;
 		body.allowRotation = false;
 	}

@@ -18,6 +18,7 @@ class Bullet extends FlxNapeSprite
 {
 	
 	public var bList : BodyList;
+	public var playerInstance : Player;
 	
 	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool = true, EnablePhysics:Bool = true, player: Player ) 
 	{
@@ -31,13 +32,24 @@ class Bullet extends FlxNapeSprite
 		var vec = new Vec2((player.x - this.x) / 4, (player.y - this.y) /4);
 		this.body.velocity.set(vec);
 		
-		for (i in this.body.shapes)
+		for ( a in body.shapes)
+		{
+			a.sensorEnabled = true;
+			a.filter.collisionMask =  ~2;
+			a.filter.sensorMask =  2;
+			a.filter.sensorGroup =  1;
+			
+		}
+		
+		playerInstance = player;
+		
+	/*	for (i in this.body.shapes)
 		{
 			i.sensorEnabled = true;
 		}
 		var collisionFilter = new InteractionFilter(2, -1, 1, -1, 1, 1);
 		
-		this.body.setShapeFilters(collisionFilter);
+		this.body.setShapeFilters(collisionFilter);*/
 		//bList = this.body.interactingBodies(InteractionType.SENSOR, -1);
 		
 	}
@@ -49,6 +61,14 @@ class Bullet extends FlxNapeSprite
 		{
 			this.kill();
 		}
+		
+		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
+		if (yolo.length > 1)
+		{
+			this.kill();
+			playerInstance.LooseLife();
+		}
+		//trace("YOLOOOO:" + yolo.length);
 		
 		//trace("List :" + bList.length);
 		

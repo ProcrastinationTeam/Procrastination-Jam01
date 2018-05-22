@@ -7,6 +7,7 @@ import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import nape.callbacks.InteractionType;
 import nape.dynamics.InteractionFilter;
 import nape.phys.BodyType;
 import nape.shape.Circle;
@@ -32,8 +33,13 @@ class Player extends FlxNapeSprite
 		this.body.allowMovement = true;
 		this.body.allowRotation = true;
 		this.body.userData.entityType = EntityType.PLAYER;
-		var collisionFilter = new InteractionFilter(1,-1, 1, -1, 1, 1);
-		this.body.setShapeFilters(collisionFilter);
+		for ( a in body.shapes) {
+			a.sensorEnabled = true;
+			a.filter.sensorGroup = 2;
+			//a.filter.sensorMask = 1;
+		}
+		//var collisionFilter = new InteractionFilter(1,-1, 1, -1, 1, 1);
+		//this.body.setShapeFilters(collisionFilter);
 		
 		
 		
@@ -48,6 +54,13 @@ class Player extends FlxNapeSprite
 		//updateLifeHUD();
 		//
 	//}
+	
+	override public function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
+		trace("SENSOR:" + yolo.length);
+	}
 	
 	public function updateLifeHUD()
 	{

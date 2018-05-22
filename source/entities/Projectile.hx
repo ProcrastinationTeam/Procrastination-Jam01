@@ -3,6 +3,7 @@ import enums.EntityType;
 import enums.ProjectileState;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import nape.callbacks.InteractionType;
 
 class Projectile extends FlxNapeSprite
 {
@@ -30,5 +31,21 @@ class Projectile extends FlxNapeSprite
 		
 		body.userData.parent = this;
 		body.userData.entityType = entityType;
+		
+		for ( a in body.shapes)
+		{
+			a.filter.collisionMask = 2;
+			a.filter.collisionGroup = 2;
+			a.filter.sensorGroup = 2;
+			a.filter.sensorMask = 2;
+		}
+		
+		
+	}
+	
+	override public function update(elpased: Float) {
+		super.update(elpased);
+		//var yolo = body.interactingBodies(InteractionType.COLLISION, -1);
+		//trace("YOLOOOO:" + yolo.length);
 	}
 }
