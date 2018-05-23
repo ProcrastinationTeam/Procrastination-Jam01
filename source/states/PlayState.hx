@@ -180,7 +180,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, AssetsImages.player__png,false,true);
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, false,true);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -551,7 +551,7 @@ class PlayState extends FlxState
 			endText.text = "You Loose !";
 			endText.set_visible(true);
 			
-			new FlxTimer().start(3, loadNextState, 1);
+			new FlxTimer().start(3, restartLevel, 1);
 		}
 		
 		if (targets.length == 0 && !gameEnd) {
@@ -651,6 +651,13 @@ class PlayState extends FlxState
 		{
 			FlxG.switchState(new PlayState(levelId+1));
 		}
+		
+	}
+	
+	public function restartLevel(timer:FlxTimer):Void {
+	
+		FlxG.switchState(new PlayState(levelId));
+		
 		
 	}
 	

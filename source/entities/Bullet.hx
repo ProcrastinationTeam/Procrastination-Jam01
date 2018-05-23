@@ -66,7 +66,12 @@ class Bullet extends FlxNapeSprite
 		if (yolo.length > 1)
 		{
 			this.kill();
-			playerInstance.LooseLife();
+			if (playerInstance.isVunerable)
+			{
+				playerInstance.invulnerabilityUp();
+				playerInstance.LooseLife();
+			}
+			
 		}
 		//trace("YOLOOOO:" + yolo.length);
 		

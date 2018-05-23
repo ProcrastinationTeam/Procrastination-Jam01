@@ -7,6 +7,7 @@ import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxTimer;
 import nape.callbacks.InteractionType;
 import nape.dynamics.InteractionFilter;
 import nape.phys.BodyType;
@@ -24,11 +25,18 @@ class Player extends FlxNapeSprite
 	public var dashing						: Bool 				= false;
 	public var canDash						: Bool 				= true;
 	public var shieldUp						: Bool				= true;
+	public var isVunerable					: Bool				= true;
 
 	
-	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool = true, EnablePhysics:Bool = true)
+	public function new(X:Float = 0, Y:Float = 0, CreateRectangularBody:Bool = true, EnablePhysics:Bool = true)
 	{
-		super(X+60 , Y + 60, SimpleGraphic, CreateRectangularBody, EnablePhysics);
+		super(X + 60 , Y + 60, CreateRectangularBody, EnablePhysics);
+		this.loadGraphic("assets/images/playerSprite.png", true, 32, 32);
+		this.animation.add("idle", [0], 30);
+		this.animation.add("infinity", [1], 30);
+		this.animation.play("idle");
+		
+		
 		this.createCircularBody(16, BodyType.DYNAMIC);
 		this.body.allowMovement = true;
 		this.body.allowRotation = true;
@@ -94,6 +102,18 @@ class Player extends FlxNapeSprite
 	public function LooseScore(value :Int)
 	{
 		Reg.score -= value;
+	}
+	
+	public function invulnerabilityUp() {
+		isVunerable = false;
+		var timer = new FlxTimer();
+		this.animation.play("infinity");
+		timer.start(3.0, invulnerabilityDisable, 1);
+	}
+	
+	public function invulnerabilityDisable(timer: FlxTimer) {
+		isVunerable = true;
+		this.animation.play("idle");
 	}
 	
 }
