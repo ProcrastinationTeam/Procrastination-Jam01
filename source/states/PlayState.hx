@@ -118,7 +118,6 @@ class PlayState extends FlxState
 		super.create();
 		
 		
-		
 		Reg.state = this;
 		
 		// Nape init
@@ -611,9 +610,12 @@ class PlayState extends FlxState
 						//obstacleShape = ObstacleShape.BLOCK;
 					case 1:
 						//obstacleShape = ObstacleShape.BLOCK
+						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED2, player );
+						target.body.userData.parent = target;
+						targets.add(target);
 					case 2:
 						//obstacleShape = ObstacleShape.BLOCK;
-						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED, player );
+						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target2__png, FlxG.random.int(0, 359), 0, TargetType.FIXED, player );
 						target.body.userData.parent = target;
 						targets.add(target);
 						

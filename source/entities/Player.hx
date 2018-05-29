@@ -67,7 +67,7 @@ class Player extends FlxNapeSprite
 	{
 		super.update(elapsed);
 		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
-		trace("SENSOR:" + yolo.length);
+	//	trace("SENSOR:" + yolo.length);
 	}
 	
 	public function updateLifeHUD()

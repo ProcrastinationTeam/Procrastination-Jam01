@@ -19,7 +19,7 @@ class Target extends FlxNapeSprite
 {
 	public var entityType 			: EntityType	= EntityType.TARGET;
 	public var initialRotation 		: Float;
-	public var type 				: Int;
+	//public var type 				: Int;
 	public var _id 					: Int;
 	public var _type 				: TargetType;
 	public var hitArea				: FlxSprite;
@@ -31,7 +31,7 @@ class Target extends FlxNapeSprite
 	public var cooldown 			: FlxTimer;
 	public var canShoot 			: Bool = true;
 	
-	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, InitialRotation:Float = 0, id:Int, type:enums.TargetType, player:Player ) {
+	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, InitialRotation:Float = 0, id:Int, type:TargetType, player:Player ) {
 		super(X, Y);
 		_id = id;
 		_type = type;
@@ -75,7 +75,7 @@ class Target extends FlxNapeSprite
 	{
 		canShoot = false;
 		cooldown.start(0.2, cooldownUp, 1);
-		bullet = new Bullet(this.x, this.y, "assets/images/bullet.png", false, true, _player);
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type);
 		projectiles.add(bullet);
 	}
 	
@@ -84,4 +84,30 @@ class Target extends FlxNapeSprite
 		canShoot = true;
 	}
 	
+	override public function kill()
+	{
+		super.kill();
+		
+		if (body != null)
+		{
+			body.space = null;
+		}
+		
+		
+		explode();
+		
+	}
+	
+	public function explode() {
+		
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"UP");
+		projectiles.add(bullet);
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"DOWN");
+		projectiles.add(bullet);
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"LEFT");
+		projectiles.add(bullet);
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type, "RIGHT");
+		projectiles.add(bullet);
+
+	}
 }
