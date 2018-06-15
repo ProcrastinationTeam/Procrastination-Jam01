@@ -9,4 +9,10 @@ class Tweaking {
 	public static inline var dashCooldown				: Float			= 1;
 	public static inline var dashAcceleration			: Float			= 4;
 	public static inline var dashDuration				: Float			= 0.15;
+	
+	
+	//Enemy tweaking
+	public static inline var bulletSpeed				:Float 		= 2;
+	public static inline var bulletSpeed2				:Float 		= 4;
+	public static inline var bulletSpeed3				:Float 		= 0.5;
 }
