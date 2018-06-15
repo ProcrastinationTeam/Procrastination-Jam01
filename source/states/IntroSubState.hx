@@ -28,16 +28,19 @@ class IntroSubState extends FlxSubState
 	override public function create():Void 
 	{
 		super.create();
+		Sys.sleep(1.0);
+		FlxTween.tween(textToTween, {x: 900}, 0.4);
+		FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
 	}
 	
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
-		if ( FlxG.keys.justPressed.SPACE)
-		{
-			FlxTween.tween(textToTween, {x: 900}, 0.4);
-			FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
-		}
+		// if ( FlxG.keys.justPressed.SPACE)
+		// {
+		// 	FlxTween.tween(textToTween, {x: 900}, 0.4);
+		// 	FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
+		// }
 	}
 	
 	
