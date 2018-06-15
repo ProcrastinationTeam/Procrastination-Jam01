@@ -104,19 +104,31 @@ class PlayState extends FlxState
 	//Sub
 	public var substate						:IntroSubState;
 	public var pauseSubstate				:PauseSubState;
-	
-	
+
+
+	// Inputs => va aller dans player => FlxAction
+	public var inputAction					: Bool = false;
+	public var inputDash					: Bool = false;
+	public var inputPause					: Bool = false;
+
+	public var inputDown					: Float = 0;
+	public var inputRight					: Float = 0;
+
+	// Vectors
+	public var movementVector:FlxVector = new FlxVector();
+	public var vectorPlayerToTarget:FlxVector = new FlxVector();
+	public var vectorProjectileToPlayer:FlxVector = new FlxVector();
+	public var vectorProjectileSpriteToPlayer:FlxVector = new FlxVector();
+	public var vectorProjectileToTarget:FlxVector = new FlxVector();
+
 	override public function new(levelid:Int):Void {
 		super();
 		levelId = levelid;
 		levelPath = "assets/data/level" + levelId + ".csv";
-		
 	}
-	
 	
 	override public function create():Void {
 		super.create();
-		
 		
 		Reg.state = this;
 		
@@ -164,8 +176,6 @@ class PlayState extends FlxState
 		endText = new FlxText(FlxG.width / 2, FlxG.height / 2, 0, "YOU WIN !", 24, true);
 		endText.setPosition(FlxG.width / 2 - (endText.width / 2), FlxG.height / 2 - (endText.height / 2));
 		endText.set_visible(false);
-		
-		
 		
 		railSprite = new FlxSprite();
 		railSprite.screenCenter();
@@ -262,13 +272,13 @@ class PlayState extends FlxState
 		#end
 		
 		FlxG.mouse.visible = false;
-		
-		
 	}
 
 	
 	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
+
+		updateInputs(elapsed);
 		
 		elapsedTime += elapsed;
 		
@@ -299,9 +309,98 @@ class PlayState extends FlxState
 			FlxG.switchState(new PlayState(levelId));
 		}
 		#end
+
+		playerCrosshair.angle += elapsed * 50;
+
+		if (inputPause) {
+			pauseSubstate = new PauseSubState(FlxColor.BLUE);
+			closeSubState();
+			openSubState(pauseSubstate);
+		}
 		
+		if (inputDash && player.canDash) {
+			player.dashing = true;
+			player.canDash = false;
+			new FlxTimer().start(Tweaking.dashDuration, function(_) {
+				player.dashing = false;
+				
+				new FlxTimer().start(Tweaking.dashCooldown, function(_) {
+					player.canDash = true;
+				});
+			});
+		}
+		
+		if (inputAction) {
+			switch(projectile.state) {
+				case ON_PLAYER:
+					// GO !
+					player.shieldUp = false;
+					projectile.state = MOVING_TOWARDS_TARGET;
+					projectile.body.velocity.setxy(vectorProjectileToTarget.x * Tweaking.projectileSpeed, vectorProjectileToTarget.y * Tweaking.projectileSpeed);
+				case ON_TARGET:
+					// COME BACK !
+					
+					projectile.state = MOVING_TOWARDS_PLAYER;
+					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
+				default:
+					// DO NOTHING!
+			}
+		}
+		
+		// YOU LOOSE
+		if (player.life <= 0)
+		{
+			trace("You Loose");
+			gameEnd = true;
+			endText.text = "You Loose !";
+			endText.set_visible(true);
+			
+			new FlxTimer().start(3, restartLevel, 1);
+		}
+		
+		if (targets.length == 0 && !gameEnd) {
+			trace("You win");
+			gameEnd = true;
+			endText.text = "You Win !";
+			endText.set_visible(true);
+			
+			new FlxTimer().start(3, loadNextState, 1);
+		}
+		
+		#if debug
+		debugCanvas.fill(FlxColor.TRANSPARENT);
+		// Line between center and player
+		debugCanvas.drawLine(center.x, center.y, player.x + player.width/2, player.y + player.height/2, { color: FlxColor.RED, thickness: 2 });
+		
+		// Line between projectile and target
+		if (projectile.state == ProjectileState.ON_PLAYER) {
+			debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+		}
+		
+		// line between projectile and player
+		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
+		
+		// Tangent movement line
+		debugCanvas.drawLine(	player.x + player.width/2 - rightVectorPerpendicular.x, player.y + player.height/2 - rightVectorPerpendicular.y,
+								player.x + player.width/2 + rightVectorPerpendicular.x, player.y + player.height/2 + rightVectorPerpendicular.y,
+								{ color: FlxColor.RED, thickness: 2 });
+		
+		// Movement direction
+		debugCanvas.drawLine(player.x + player.width/2, player.y + player.height/2, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
+		#end
+	}
+
+	public function updateInputs(elapsed:Float) {
 		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
-		
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Main Inputs
+		inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_TRIGGER || gamepad.justPressed.RIGHT_SHOULDER));
+		inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.LEFT_TRIGGER || gamepad.justPressed.LEFT_SHOULDER));
+		inputPause = FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START);
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Target inputs
 		var mouseMoved = true;
 		if (previousMousePosition.x == FlxG.mouse.x && previousMousePosition.y == FlxG.mouse.y) {
 			// Pas bougé
@@ -311,7 +410,7 @@ class PlayState extends FlxState
 		previousMousePosition.x = FlxG.mouse.x;
 		previousMousePosition.y = FlxG.mouse.y;
 		
-		var stickSensitivity = 10;
+		// var stickSensitivity = 10;
 		if (gamepad != null) {
 			// TODO: pour éviter le snapping, mais est ce qu'on veut éviter le snapping ?
 			gamepad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
@@ -326,75 +425,52 @@ class PlayState extends FlxState
 		}
 		if (mouseMoved) {
 			playerTarget.set(FlxG.mouse.x, FlxG.mouse.y);
-			//playerCrosshair.setPosition(FlxG.mouse.x - playerCrosshair.width / 2, FlxG.mouse.y - playerCrosshair.height / 2);
 		}
-		
+
 		playerCrosshair.setPosition(playerTarget.x - playerCrosshair.width / 2, playerTarget.y - playerCrosshair.height / 2);
-		playerCrosshair.angle += elapsed * 50;
-		
-		if (FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START)) {
-			//ActionPauseGame();
-			//if (isGamePaused == false){
-				pauseSubstate = new PauseSubState(FlxColor.BLUE);
-				closeSubState();
-				openSubState(pauseSubstate);
-			//	isGamePaused = true;
-			//}
-			
-			
-			
-		}
-		
-		if (FlxG.keys.justPressed.SPACE && player.canDash) {
-			player.dashing = true;
-			player.canDash = false;
-			new FlxTimer().start(Tweaking.dashDuration, function(_) {
-				player.dashing = false;
-				
-				new FlxTimer().start(Tweaking.dashCooldown, function(_) {
-					player.canDash = true;
-				});
-			});
-		}
-		
-		var down:Float = 0;
-		var right:Float = 0;
-		var movementVector:FlxVector = FlxVector.get(0, 0);
-		
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Movement inputs
+
+		// Before moving the player
 		var vectorPlayerToCenter:FlxVector = FlxVector.get(
 													center.x - player.x, 
 													center.y - player.y).normalize();
-		
+
+		var epsilon = 0.01;
+
+		inputDown = 0;
+		inputRight = 0;
 		var instantRotation:Float = 0;
+
 		if (useManualControls) {
 			// METHOD 1: manual
-			
-			var epsilon = 0.01;
-			
+
 			if (FlxG.keys.pressed.Z) {
-				down = -1;
+				inputDown = -1;
 			} else if (FlxG.keys.pressed.S) {
-				down = 1;
+				inputDown = 1;
 			}
 			
 			if (FlxG.keys.pressed.Q) {
-				right = -1;
+				inputRight = -1;
 			} else if (FlxG.keys.pressed.D) {
-				right = 1;
+				inputRight = 1;
 			}
 			
-			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
-				right = gamepad.analog.value.LEFT_STICK_X;
-			}
 			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_Y) > epsilon) {
-				down = gamepad.analog.value.LEFT_STICK_Y;
+				inputDown = gamepad.analog.value.LEFT_STICK_Y;
 			}
-			
-			movementVector.set(right, down);
-			var movementVectorLength = movementVector.length;
+			if (gamepad != null && Math.abs(gamepad.analog.value.LEFT_STICK_X) > epsilon) {
+				inputRight = gamepad.analog.value.LEFT_STICK_X;
+			}
+
+			movementVector.set(0, 0);
+			movementVector.set(inputRight, inputDown);
+			var movementVectorLength:Float = movementVector.length;
 			movementVector.normalize();
 			
-			if (Math.abs(right) == 1 && Math.abs(down) == 1) {
+			if (Math.abs(inputRight) == 1 && Math.abs(inputDown) == 1) {
 				movementVectorLength = movementVector.length;
 			}
 			
@@ -402,13 +478,10 @@ class PlayState extends FlxState
 			var angle = Math.atan2( -movementVector.y, movementVector.x) - Math.atan2( -vectorPlayerToCenter.y, vectorPlayerToCenter.x);
 			angle = FlxAngle.wrapAngle(FlxAngle.asDegrees(angle));
 			
-			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.LEFT_SHOULDER)) {
-				//dash();
-			}
-			
 			player.rpm = Tweaking.playerRpmBase * movementVectorLength;
+			// Can't change direction during dash
 			player.clockwise = player.dashing ? player.clockwise : (angle > 0 ? true : false);
-			
+
 			//trace(angle);
 			
 			//if (FlxG.keys.pressed.H || (gamepad != null && gamepad.pressed.RIGHT_SHOULDER)) {
@@ -470,124 +543,25 @@ class PlayState extends FlxState
 		rightVectorPerpendicular.rotateByDegrees(instantRotation);
 		player.setPosition(center.x + rightVector.x, center.y + rightVector.y);
 		
-		var vectorPlayerToTarget:FlxVector = FlxVector.get(
-													playerTarget.x - player.x,
-													playerTarget.y - player.y).normalize();
+		vectorPlayerToTarget.set(			
+				playerTarget.x - player.x,
+				playerTarget.y - player.y)
+			.normalize();
 													
-		var vectorProjectileToPlayer:FlxVector = FlxVector.get(
-													player.x - (projectile.x + projectile.width / 2), 
-													player.y - (projectile.y + projectile.height / 2)).normalize();
-													
-		var vectorProjectileSpriteToPlayer:FlxVector = FlxVector.get(
-													player.x + player.width/2 - (projectileSprite.x + projectileSprite.width / 2), 
-													player.y + player.height/2 - (projectileSprite.y + projectileSprite.height / 2)).normalize();
-													
-		//projectileOrbitPosition.set(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
-		
-		switch(projectile.state) {
-			case ON_PLAYER:
-				// CONTINUE FOLLOWING PLAYER!
-				projectile.setPosition(player.x + vectorPlayerToTarget.x * 30, player.y + vectorPlayerToTarget.y * 30);
-			case MOVING_TOWARDS_TARGET:
-				// CONTINUE GOING TO TARGET
-			case MOVING_TOWARDS_PLAYER:
-				// FOLLOW PLAYER!
-				projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
-				if (FlxMath.distanceBetween(projectile, player) < 30) {
-					projectile.state = ON_PLAYER;
-					player.shieldUp = true;
-				}
-			case ON_TARGET:
-				// DO NOTHING!
-			case OFF_SCREEN:
-				// DO NOTHING!
-			case MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN:
-				// COME BACK FAST!
-				projectileSprite.velocity.set(vectorProjectileSpriteToPlayer.x * Tweaking.projectileSpeedOffScreen, vectorProjectileSpriteToPlayer.y * Tweaking.projectileSpeedOffScreen);
-				if (FlxMath.distanceBetween(projectileSprite, player) < 100) {
-					projectile.state = ON_PLAYER;
-					projectileSprite.setPosition( -100, -100);
-					projectileSprite.velocity.set(0, 0);
-					
-					player.LooseLife();
-				}
-		}
-		
-		var vectorProjectileToTarget:FlxVector = FlxVector.get(
-													playerTarget.x - (projectile.x + projectile.width / 2),
-													playerTarget.y - (projectile.y + projectile.height / 2)).normalize();
-		
-		if (FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_TRIGGER || gamepad.justPressed.RIGHT_SHOULDER))) {
-			switch(projectile.state) {
-				case ON_PLAYER:
-					// GO !
-					player.shieldUp = false;
-					projectile.state = MOVING_TOWARDS_TARGET;
-					projectile.body.velocity.setxy(vectorProjectileToTarget.x * Tweaking.projectileSpeed, vectorProjectileToTarget.y * Tweaking.projectileSpeed);
-				case ON_TARGET:
-					// COME BACK !
-					
-					projectile.state = MOVING_TOWARDS_PLAYER;
-					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
-				default:
-					// DO NOTHING!
-			}
-		}
-		
-		for (target in targets) {
-			target.body.angularVel = FlxAngle.asRadians(instantRotation * 60);
-		}
-		
-		//for (targetHitArea in targetsHitarea) {
-			//targetHitArea.angularVelocity = instantRotation * 60;
-		//}
-		
-		// YOU LOOSE
-		if (player.life <= 0)
-		{
-			trace("You Loose");
-			gameEnd = true;
-			endText.text = "You Loose !";
-			endText.set_visible(true);
-			
-			new FlxTimer().start(3, restartLevel, 1);
-		}
-		
-		if (targets.length == 0 && !gameEnd) {
-			trace("You win");
-			gameEnd = true;
-			endText.text = "You Win !";
-			endText.set_visible(true);
-			
-			new FlxTimer().start(3, loadNextState, 1);
-		}
-		
-		#if debug
-		debugCanvas.fill(FlxColor.TRANSPARENT);
-		// Line between center and player
-		debugCanvas.drawLine(center.x, center.y, player.x + player.width/2, player.y + player.height/2, { color: FlxColor.RED, thickness: 2 });
-		
-		// Line between projectile and target
-		if (projectile.state == ProjectileState.ON_PLAYER) {
-			debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
-		}
-		
-		// line between projectile and player
-		debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, player.x, player.y, { color: FlxColor.RED, thickness: 2 });
-		
-		// Tangent movement line
-		debugCanvas.drawLine(	player.x + player.width/2 - rightVectorPerpendicular.x, player.y + player.height/2 - rightVectorPerpendicular.y,
-								player.x + player.width/2 + rightVectorPerpendicular.x, player.y + player.height/2 + rightVectorPerpendicular.y,
-								{ color: FlxColor.RED, thickness: 2 });
-		
-		// Movement direction
-		debugCanvas.drawLine(player.x + player.width/2, player.y + player.height/2, player.x + movementVector.x * 50, player.y + movementVector.y * 50, { color: FlxColor.RED, thickness: 2 });
-		#end
-		
-		vectorPlayerToTarget.put();
-		vectorProjectileToTarget.put();
-		vectorProjectileToPlayer.put();
-		vectorProjectileSpriteToPlayer.put();
+		vectorProjectileToPlayer.set(		
+				player.x - (projectile.x + projectile.width / 2), 
+				player.y - (projectile.y + projectile.height / 2))
+			.normalize();
+
+		vectorProjectileSpriteToPlayer.set(	
+				player.x + player.width/2 - (projectileSprite.x + projectileSprite.width / 2), 
+				player.y + player.height/2 - (projectileSprite.y + projectileSprite.height / 2))
+			.normalize();
+
+		vectorProjectileToTarget.set(
+				playerTarget.x - (projectile.x + projectile.width / 2),
+				playerTarget.y - (projectile.y + projectile.height / 2))
+			.normalize();
 	}
 	
 	public function createLevel(levelPath : String)
@@ -662,19 +636,6 @@ class PlayState extends FlxState
 		
 		
 	}
-	
-	//public function ActionPauseGame():Void {
-		//isGamePaused = !isGamePaused;
-		//
-		//if (isGamePaused) {
-			//FlxG.timeScale = 0;
-			//pauseText.visible = true;
-		//}
-		//else {
-			//FlxG.timeScale = 1;
-			//pauseText.visible = false;
-		//}
-	//}
 	
 	public function onBulletCollides(callback:InteractionCallback) {
 		

@@ -65,7 +65,7 @@ class Bullet extends FlxNapeSprite
 					
 					if (playerDir)
 					{
-						trace("CLOCKWISE");
+						// trace("CLOCKWISE");
 						//vec = new Vec2((player.x - this.x ) / 4, (player.y - this.y + 75) );
 						var newAngle = initialAngle + 20;
 						//var lengthh = 400 * 400 + 400 * 400  - 2 * 400 * 400 * Math.cos(newAngle);
@@ -84,7 +84,7 @@ class Bullet extends FlxNapeSprite
 					}
 					else
 					{
-						trace("COUNTER CLOCKWISE");
+						// trace("COUNTER CLOCKWISE");
 						var newAngle = initialAngle + 20;
 						//var lengthh = 400 * 400 + 400 * 400  - 2 * 400 * 400 * Math.cos(newAngle);
 						var newX = (playerPos.x * Math.cos(newAngle) - (playerPos.y) * Math.sin(newAngle));

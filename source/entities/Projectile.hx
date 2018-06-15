@@ -1,9 +1,9 @@
 package entities;
+import flixel.math.FlxMath;
 import enums.EntityType;
 import enums.ProjectileState;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
-import nape.callbacks.InteractionType;
 
 class Projectile extends FlxNapeSprite
 {
@@ -45,7 +45,35 @@ class Projectile extends FlxNapeSprite
 	
 	override public function update(elpased: Float) {
 		super.update(elpased);
-		//var yolo = body.interactingBodies(InteractionType.COLLISION, -1);
-		//trace("YOLOOOO:" + yolo.length);
+
+		// TODO: merge projectile and projectileSprite
+		switch(state) {
+			case ON_PLAYER:
+				// CONTINUE FOLLOWING PLAYER!
+				setPosition(Reg.state.player.x + Reg.state.vectorPlayerToTarget.x * 30, Reg.state.player.y + Reg.state.vectorPlayerToTarget.y * 30);
+			case MOVING_TOWARDS_TARGET:
+				// CONTINUE GOING TO TARGET
+			case MOVING_TOWARDS_PLAYER:
+				// FOLLOW PLAYER!
+				body.velocity.setxy(Reg.state.vectorProjectileToPlayer.x * Tweaking.projectileSpeed, Reg.state.vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
+				if (FlxMath.distanceBetween(this, Reg.state.player) < 30) {
+					state = ON_PLAYER;
+					Reg.state.player.shieldUp = true;
+				}
+			case ON_TARGET:
+				// DO NOTHING!
+			case OFF_SCREEN:
+				// DO NOTHING!
+			case MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN:
+				// COME BACK FAST!
+				Reg.state.projectileSprite.velocity.set(Reg.state.vectorProjectileSpriteToPlayer.x * Tweaking.projectileSpeedOffScreen, Reg.state.vectorProjectileSpriteToPlayer.y * Tweaking.projectileSpeedOffScreen);
+				if (FlxMath.distanceBetween(Reg.state.projectileSprite, Reg.state.player) < 100) {
+					state = ON_PLAYER;
+					Reg.state.projectileSprite.setPosition( -100, -100);
+					Reg.state.projectileSprite.velocity.set(0, 0);
+					
+					Reg.state.player.LooseLife();
+				}
+		}
 	}
 }
