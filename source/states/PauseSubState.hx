@@ -267,7 +267,9 @@ class PauseSubState extends FlxSubState
 	}
 	
 	public function exitGame(s: String): Void {
+		#if sys
 		Sys.exit(0);
+		#end
 	}
 	
 	public function changeMenu(s:String): Void {
