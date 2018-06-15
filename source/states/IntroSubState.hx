@@ -1,5 +1,6 @@
 package states;
 
+import flixel.util.FlxTimer;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
@@ -28,9 +29,10 @@ class IntroSubState extends FlxSubState
 	override public function create():Void 
 	{
 		super.create();
-		Sys.sleep(1.0);
-		FlxTween.tween(textToTween, {x: 900}, 0.4);
-		FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
+		new FlxTimer().start(1, function(_) {
+			FlxTween.tween(textToTween, {x: 900}, 0.4);
+			FlxTween.tween(spriteToTween, {x: 900}, 0.4, {onComplete: endSubstate});
+		});
 	}
 	
 	override public function update(elapsed:Float):Void
