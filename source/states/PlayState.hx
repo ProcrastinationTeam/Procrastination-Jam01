@@ -750,6 +750,9 @@ class PlayState extends FlxState
 			player.addScore(100);
 			
 			// That swag
+			
+			//FlxG.camera.shake(0.01, 0.2);
+			FlxG.camera.shake(0.01,0.1);
 			FlxG.timeScale = 0.05;
 			if (slowMoTimer == null) {
 				slowMoTimer = new FlxTimer().start(0.03, function(_) {

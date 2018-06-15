@@ -7,6 +7,7 @@ import flixel.addons.nape.FlxNapeSpace;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
+import flixel.input.gamepad.FlxGamepad;
 import flixel.util.FlxColor;
 
 /**
@@ -15,11 +16,7 @@ import flixel.util.FlxColor;
  */
 class PauseSubState extends FlxSubState 
 {
-
-	public var spriteToTween:FlxSprite;
-	public var textToTween:FlxText;
-	
-	// options //
+		// options //
 	
 	//resume
 	// game
@@ -32,7 +29,11 @@ class PauseSubState extends FlxSubState
 	// controle
 		//keybind
 	//quit
-	
+
+	public var gamepad:FlxGamepad;
+
+	public var spriteToTween:FlxSprite;
+	public var textToTween:FlxText;
 	
 	public var highlightSelection : Int;
 	public var optionsName : Array<String>;
@@ -45,7 +46,6 @@ class PauseSubState extends FlxSubState
 	public var gameOptionsName : Array<String>;
 	public var gameOptionsNameF : Map<String,String->Void>;
 	
-	
 	public var menuText: FlxTypedGroup<FlxText>;
 	public var gameOptionsText: FlxTypedGroup<FlxText>;
 	public var videoOptionsText: FlxTypedGroup<FlxText>;
@@ -54,6 +54,7 @@ class PauseSubState extends FlxSubState
 	public var currentOptionsText:FlxTypedGroup<FlxText>;
 	public var currentOptionsFunctions:Map<String,String->Void>;
 	
+	public var breadcrumb:Array<String>;
 	
 	public function initAudioOptions()
 	{
@@ -122,6 +123,7 @@ class PauseSubState extends FlxSubState
 	public function new(BGColor:FlxColor=FlxColor.TRANSPARENT) 
 	{
 		super(BGColor);
+		breadcrumb = new Array<String>();
 		menuText = new FlxTypedGroup<FlxText>();
 		currentOptionsText = new FlxTypedGroup<FlxText>();
 		
@@ -169,6 +171,14 @@ class PauseSubState extends FlxSubState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+	
+		gamepad = FlxG.gamepads.lastActive;
+	
+		if(gamepad != null) 
+		{
+			updateGamepadInput(gamepad);
+		}
+
 		if (FlxG.keys.justPressed.ESCAPE)
 		{
 			close();
@@ -182,7 +192,6 @@ class PauseSubState extends FlxSubState
 		if (FlxG.keys.justPressed.DOWN)
 		{
 			currentOptionsText.members[highlightSelection].color = FlxColor.WHITE;
-			
 			highlightSelection ++;
 			
 			if (highlightSelection > currentOptionsText.length-1)
@@ -196,7 +205,6 @@ class PauseSubState extends FlxSubState
 		if (FlxG.keys.justPressed.UP)
 		{
 			currentOptionsText.members[highlightSelection].color = FlxColor.WHITE;
-			
 			highlightSelection --;
 			
 			if (highlightSelection < 0)
@@ -206,10 +214,54 @@ class PauseSubState extends FlxSubState
 			
 			currentOptionsText.members[highlightSelection].color = FlxColor.YELLOW;
 		}
-
 	}
 	
-	
+	function updateGamepadInput(gamepad:FlxGamepad): Void
+	{
+		if(gamepad.analog.justMoved.LEFT_STICK_Y)
+		{
+			if(gamepad.analog.value.LEFT_STICK_Y > 0 )
+			{
+				currentOptionsText.members[highlightSelection].color = FlxColor.WHITE;
+				highlightSelection ++;
+				
+				if (highlightSelection > currentOptionsText.length-1)
+				{
+					highlightSelection = 0;
+				}
+				
+				currentOptionsText.members[highlightSelection].color = FlxColor.YELLOW;
+			}
+			else
+			{
+				currentOptionsText.members[highlightSelection].color = FlxColor.WHITE;
+				highlightSelection --;
+				
+				if (highlightSelection < 0)
+				{
+					highlightSelection = currentOptionsText.length-1;
+				}
+			
+				currentOptionsText.members[highlightSelection].color = FlxColor.YELLOW;
+			}
+		}
+
+		if(gamepad.justPressed.A)
+		{
+			selectOption("");
+		}
+
+		if(gamepad.justPressed.B)
+		{
+			changeMenu("return_parent");
+		}
+
+		if(gamepad.pressed.START)
+		{
+			resumeGame("");
+		}
+	}
+
 	public function resumeGame(s: String): Void {
 		close();
 	}
@@ -229,9 +281,8 @@ class PauseSubState extends FlxSubState
 			currentOptionsFunctions = gameOptionsNameF;
 			optionChoose = "game_options";
 			menuText.visible = !menuText.visible;
-			gameOptionsText.visible = !gameOptionsText.visible;
+			currentOptionsText.visible = !currentOptionsText.visible;
 		}
-		
 		
 		if (s == "video_options")
 		{
@@ -239,9 +290,8 @@ class PauseSubState extends FlxSubState
 			currentOptionsFunctions = videoOptionsNameF;
 			optionChoose = "video_options";
 			menuText.visible = !menuText.visible;
-			videoOptionsText.visible = !videoOptionsText.visible;
+			currentOptionsText.visible = !currentOptionsText.visible;
 		}
-		
 		
 		if (s == "audio_options")
 		{
@@ -249,8 +299,49 @@ class PauseSubState extends FlxSubState
 			currentOptionsFunctions = audioOptionsNameF;
 			optionChoose = "audio_options";
 			menuText.visible = !menuText.visible;
-			audioOptionsText.visible = !audioOptionsText.visible;
+			currentOptionsText.visible = !currentOptionsText.visible;
 		}
+
+		// Little bit hardcoded
+		if (s == "return_parent" && !menuText.visible)
+		{
+			highlightSelection = 0;
+			currentOptionsFunctions = optionsNameF;
+			currentOptionsText.visible = !currentOptionsText.visible;
+			currentOptionsText = menuText;
+			menuText.visible = true;
+		}
+
+		// hardcoded too...
+		for(i in 0...currentOptionsText.length)
+		{
+			currentOptionsText.members[i].color = FlxColor.WHITE;
+		}
+		currentOptionsText.members[0].color = FlxColor.YELLOW;
+
+	}
+	
+	
+	public function selectOption(s:String):Void
+	{
+		var optionName = currentOptionsText.members[highlightSelection].text;
+		
+		// Actually non use but will be usefull for generic menu
+		breadcrumb.push(optionName);
+
+		trace("OPTIONS :" +  optionName);
+		if (StringTools.endsWith(optionName,"options"))
+		{	
+			trace("SPECIAL MOVE ");
+			highlightSelection = 0;
+			currentOptionsFunctions[optionName](optionName);		
+		}
+		else
+		{
+			currentOptionsFunctions[optionName]("");
+			return;
+		}
+		
 	}
 	
 	public function muteGame(s: String): Void {
@@ -266,61 +357,7 @@ class PauseSubState extends FlxSubState
 		trace("DIFFICULTY UP ! ENJOY !");
 	}
 	
-	
-	public function selectOption(s:String):Void
-	{
 
-		var optionName = currentOptionsText.members[highlightSelection].text;
-	
-			
-			trace("OPTIONS :" +  optionName);
-			if (StringTools.endsWith(optionName,"options"))
-			{	
-				trace("SPECIAL MOVE ");
-				highlightSelection = 0;
-				currentOptionsFunctions[optionName](optionName);		
-			}
-			else
-			{
-				currentOptionsFunctions[optionName]("");
-				return;
-			}
-		
-		
-		//switch (id) 
-		//{
-			//case 0:
-				//close();
-			//case 1:
-				//openMoreOptions(id);
-			//case 2:
-				//Sys.exit(0);
-			//default:
-				//
-		//}
-	}
-	
-	public function openMoreOptions(idInString : String) : Void
-	{
-		var id = Std.parseInt(idInString);
-		switch (id) 
-		{
-			case 1:
-				highlightSelection = 0;
-				currentOptionsText = videoOptionsText;
-				menuText.visible = !menuText.visible;
-				videoOptionsText.visible = !videoOptionsText.visible;
-			case 2:
-				highlightSelection = 0;
-				currentOptionsText = audioOptionsText;
-				menuText.visible = !menuText.visible;
-				audioOptionsText.visible = !audioOptionsText.visible;
-				
-			default:
-				
-		}
-	}
-	
 	override public function close():Void {
 		FlxG.plugins.get(FlxNapeSpace).active = true;
 		super.close();
