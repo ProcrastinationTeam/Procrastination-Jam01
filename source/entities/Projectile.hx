@@ -1,12 +1,12 @@
 package entities;
+
 import flixel.FlxG;
-import nape.geom.Vec2;
-import flixel.util.FlxTimer;
 import flixel.math.FlxMath;
 import enums.EntityType;
 import enums.ProjectileState;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxTimer;
 
 class Projectile extends FlxNapeSprite
 {

@@ -285,7 +285,7 @@ class PlayState extends FlxState
 	
 	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
-
+		
 		updateInputs(elapsed);
 		
 		elapsedTime += elapsed;
@@ -649,9 +649,10 @@ class PlayState extends FlxState
 	}
 	
 	public function loadNextState(timer:FlxTimer):Void {
-		if (levelId == 2)
+		if (levelId == Tweaking.levelCount)
 		{
 			trace("YOU WIN");
+			//Faire un state de fin :)
 		}
 		else
 		{
