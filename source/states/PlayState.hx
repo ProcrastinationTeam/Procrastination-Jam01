@@ -202,7 +202,7 @@ class PlayState extends FlxState
 		
 		playerArrowIndicator = new FlxSprite(0, 0);
 		playerArrowIndicator.loadGraphic(AssetsImages.arrowFinal__png, true, 64, 32, false);
-		playerArrowIndicator.animation.add("idle", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1, 2, 3, 4,5,6,7,8,9,10], 11, false, false, false);
+		playerArrowIndicator.animation.add("idle", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1, 2, 3, 4,5,6,7,8,9,10], 11,true, false, false);
 		playerArrowIndicator.animation.play("idle");
 		playerArrowIndicator.visible = false;
 		
@@ -253,7 +253,6 @@ class PlayState extends FlxState
 		
 		//add(projectileSprite);
 		add(projectileSpriteTrail);
-		
 		
 		
 		//ADD UI
@@ -317,6 +316,11 @@ class PlayState extends FlxState
 		} else if (FlxG.keys.justPressed.R) {
 			FlxG.switchState(new PlayState(levelId));
 		}
+		
+		if (FlxG.keys.justPressed.NUMPADFIVE)
+		{
+			debugCanvas.visible = !debugCanvas.visible;
+		}
 		#end
 
 		playerCrosshair.angle += elapsed * 50;
@@ -357,9 +361,7 @@ class PlayState extends FlxState
 			}
 		}
 		
-		//CHECK DES STATES DU DISQUE
-		//trace("PROJECTILE STATE : " + projectile.state);
-		
+		//CHECK DES STATES DU DISQUE (A essayer de passer dans le disque)
 		if (projectile.state == ON_TARGET)
 		{
 			if (!playerArrowIndicator.visible)
