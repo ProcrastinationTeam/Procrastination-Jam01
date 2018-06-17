@@ -285,7 +285,9 @@ class PlayState extends FlxState
 	
 	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
-
+		
+		trace("STATE : " + projectile.state);
+		
 		updateInputs(elapsed);
 		
 		elapsedTime += elapsed;
@@ -654,9 +656,10 @@ class PlayState extends FlxState
 	}
 	
 	public function loadNextState(timer:FlxTimer):Void {
-		if (levelId == 2)
+		if (levelId == Tweaking.levelCount)
 		{
 			trace("YOU WIN");
+			//Faire un state de fin :)
 		}
 		else
 		{
@@ -777,10 +780,11 @@ class PlayState extends FlxState
 	
 	public function projectileOutOfScreenCallback() {
 		projectile.state = OFF_SCREEN;
-		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
-			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
-			projectileSprite.setPosition(projectile.x, projectile.y);
-		});
+		//new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
+			//projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
+			//projectileSprite.setPosition(projectile.x, projectile.y);
+			//
+		//});
 	}
 	
 	public function tweenOut(tween : FlxTween) : Void

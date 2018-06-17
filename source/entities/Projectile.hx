@@ -1,9 +1,12 @@
 package entities;
+import flash.utils.Timer;
 import flixel.math.FlxMath;
 import enums.EntityType;
 import enums.ProjectileState;
 import flixel.addons.nape.FlxNapeSprite;
+import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxTimer;
 
 class Projectile extends FlxNapeSprite
 {
@@ -65,6 +68,9 @@ class Projectile extends FlxNapeSprite
 				// DO NOTHING!
 			case OFF_SCREEN:
 				// DO NOTHING!
+				setPosition(Reg.state.player.x + Reg.state.vectorPlayerToTarget.x * 30, Reg.state.player.y + Reg.state.vectorPlayerToTarget.y * 30);
+				state = ON_PLAYER;
+				
 			case MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN:
 				// COME BACK FAST!
 				Reg.state.projectileSprite.velocity.set(Reg.state.vectorProjectileSpriteToPlayer.x * Tweaking.projectileSpeedOffScreen, Reg.state.vectorProjectileSpriteToPlayer.y * Tweaking.projectileSpeedOffScreen);
@@ -76,5 +82,10 @@ class Projectile extends FlxNapeSprite
 					Reg.state.player.LooseLife();
 				}
 		}
+	}
+	
+	public function whenDiskOffScreen(timer : FlxTimer): Void 
+	{
+		
 	}
 }
