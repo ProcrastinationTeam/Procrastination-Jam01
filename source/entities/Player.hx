@@ -20,7 +20,7 @@ class Player extends FlxNapeSprite
 	public var speed 						: PlayerSpeed 		= PlayerSpeed.MEDIUM;
 	public var rpm 							: Float 			= Tweaking.playerRpmBase;
 	public var clockwise				 	: Bool 				= true;
-	public var life							: Int 				= 3;
+	public var life							: Int 				= 100;
 	public var lifeIcons					: FlxSpriteGroup 	= new FlxSpriteGroup();
 	public var dashing						: Bool 				= false;
 	public var canDash						: Bool 				= true;

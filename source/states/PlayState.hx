@@ -30,6 +30,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import lime.math.Vector2;
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
 import nape.callbacks.CbTypeList;
@@ -52,6 +53,7 @@ class PlayState extends FlxState
 	public var player 						: Player;
 	public var playerTarget					: FlxPoint 					= new FlxPoint();
 	public var playerCrosshair				: FlxSprite;
+	public var playerArrowIndicator			: FlxSprite;
 	
 	public var projectile	 				: Projectile;
 	public var projectileOrbitPosition		: FlxPoint					= new FlxPoint();
@@ -198,6 +200,12 @@ class PlayState extends FlxState
 		playerCrosshair.animation.add("spotted", [1, 2, 3, 4], 30, false, false, false);
 		playerCrosshair.animation.play("idle");
 		
+		playerArrowIndicator = new FlxSprite(0, 0);
+		playerArrowIndicator.loadGraphic(AssetsImages.arrowFinal__png, true, 64, 32, false);
+		playerArrowIndicator.animation.add("idle", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1, 2, 3, 4,5,6,7,8,9,10], 11, false, false, false);
+		playerArrowIndicator.animation.play("idle");
+		playerArrowIndicator.visible = false;
+		
 		projectile = new Projectile(player.x + player.width/2, player.y + player.height/2, AssetsImages.disc__png);
 		projectileTrail = new Trail(projectile);
 		//projectileTrail = new FlxTrail(projectile, null, 100, 0, 0.4, 0.02);
@@ -251,6 +259,7 @@ class PlayState extends FlxState
 		//ADD UI
 		add(levelIntroSprite);
 		add(playerCrosshair);
+		add(playerArrowIndicator);
 		add(pauseText);
 		add(levelText);
 		add(scoreText);
@@ -334,17 +343,39 @@ class PlayState extends FlxState
 			switch(projectile.state) {
 				case ON_PLAYER:
 					// GO !
+					playerCrosshair.visible = false;
 					player.shieldUp = false;
 					projectile.state = MOVING_TOWARDS_TARGET;
 					projectile.body.velocity.setxy(vectorProjectileToTarget.x * Tweaking.projectileSpeed, vectorProjectileToTarget.y * Tweaking.projectileSpeed);
 				case ON_TARGET:
 					// COME BACK !
-					
+					playerArrowIndicator.visible = false;
 					projectile.state = MOVING_TOWARDS_PLAYER;
 					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
 				default:
 					// DO NOTHING!
 			}
+		}
+		
+		//CHECK DES STATES DU DISQUE
+		//trace("PROJECTILE STATE : " + projectile.state);
+		
+		if (projectile.state == ON_TARGET)
+		{
+			if (!playerArrowIndicator.visible)
+			{
+				playerArrowIndicator.setPosition(projectile.getGraphicMidpoint().x , projectile.getGraphicMidpoint().y - playerArrowIndicator.height/2);
+				playerArrowIndicator.visible = true;
+				playerArrowIndicator.animation.play("idle");
+				playerArrowIndicator.origin.set(0, playerArrowIndicator.height/2);
+			}
+			
+			var angleToPlayer = Math.atan2(0.0, 1.0) - Math.atan2(vectorProjectileToPlayer.y, vectorProjectileToPlayer.x);				
+			playerArrowIndicator.angle =  -FlxAngle.asDegrees(angleToPlayer);
+		}
+		
+		if (FlxG.keys.justPressed.M){
+			playerArrowIndicator.angle += 10;
 		}
 		
 		// YOU LOOSE
@@ -375,6 +406,8 @@ class PlayState extends FlxState
 		// Line between projectile and target
 		if (projectile.state == ProjectileState.ON_PLAYER) {
 			debugCanvas.drawLine(projectile.x + projectile.width / 2, projectile.y + projectile.height / 2, playerTarget.x, playerTarget.y, { color: FlxColor.RED, thickness: 2 });
+			playerCrosshair.visible = true;
+		
 		}
 		
 		// line between projectile and player
@@ -549,8 +582,8 @@ class PlayState extends FlxState
 			.normalize();
 													
 		vectorProjectileToPlayer.set(		
-				player.x - (projectile.x + projectile.width / 2), 
-				player.y - (projectile.y + projectile.height / 2))
+				player.getGraphicMidpoint().x - (projectile.x + projectile.width / 2), 
+				player.getGraphicMidpoint().y - (projectile.y + projectile.height / 2))
 			.normalize();
 
 		vectorProjectileSpriteToPlayer.set(	

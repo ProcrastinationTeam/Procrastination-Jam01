@@ -60,6 +60,8 @@ class Projectile extends FlxNapeSprite
 					state = ON_PLAYER;
 					Reg.state.player.shieldUp = true;
 				}
+			case ON_STICKY:
+				// DO NOTHING!
 			case ON_TARGET:
 				// DO NOTHING!
 			case OFF_SCREEN:
