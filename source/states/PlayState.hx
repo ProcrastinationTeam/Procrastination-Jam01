@@ -251,7 +251,7 @@ class PlayState extends FlxState
 		add(projectile);
 		add(projectileTrail);
 		
-		//add(projectileSprite);
+		add(projectileSprite);
 		add(projectileSpriteTrail);
 		
 		
@@ -291,11 +291,6 @@ class PlayState extends FlxState
 		elapsedTime += elapsed;
 		
 		scoreText.text = "SCORE : " + Reg.score;
-		
-		// If the projectile JUST LEFT the screen, bring int back after a delay
-		if (!FlxMath.pointInCoordinates(projectile.x, projectile.y, 0, 0, FlxG.width, FlxG.height) && projectile.state == MOVING_TOWARDS_TARGET) {
-			projectileOutOfScreenCallback();
-		}
 		
 		#if debug
 		if (FlxG.keys.pressed.SHIFT) {
@@ -739,7 +734,7 @@ class PlayState extends FlxState
 			//projectile.state = ON_TARGET;
 			currentProjectile.setPosition(FlxG.width / 2, -100);
 			currentProjectile.body.velocity.setxy(0, 0);
-			projectileOutOfScreenCallback();
+			projectile.projectileOutOfScreenCallback();
 		} else if (currentProjectile.state == MOVING_TOWARDS_PLAYER) {
 			target.kill();
 			targets.remove(target, true);
@@ -773,14 +768,6 @@ class PlayState extends FlxState
 	
 	public function onProjectileCollidesWithBouncyObstacle(currentProjectile:Projectile, obstacle:Obstacle) {
 		// Do nothing ?
-	}
-	
-	public function projectileOutOfScreenCallback() {
-		projectile.state = OFF_SCREEN;
-		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
-			projectile.state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
-			projectileSprite.setPosition(projectile.x, projectile.y);
-		});
 	}
 	
 	public function tweenOut(tween : FlxTween) : Void

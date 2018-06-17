@@ -1,4 +1,7 @@
 package entities;
+import flixel.FlxG;
+import nape.geom.Vec2;
+import flixel.util.FlxTimer;
 import flixel.math.FlxMath;
 import enums.EntityType;
 import enums.ProjectileState;
@@ -45,6 +48,11 @@ class Projectile extends FlxNapeSprite
 	override public function update(elpased: Float) {
 		super.update(elpased);
 
+		// If the projectile JUST LEFT the screen, bring int back after a delay
+		if (!FlxMath.pointInCoordinates(x, y, 0, 0, FlxG.width, FlxG.height) && state == MOVING_TOWARDS_TARGET) {
+			projectileOutOfScreenCallback();
+		}
+
 		// TODO: merge projectile and projectileSprite
 		switch(state) {
 			case ON_PLAYER:
@@ -76,5 +84,13 @@ class Projectile extends FlxNapeSprite
 					Reg.state.player.LooseLife();
 				}
 		}
+	}
+
+	public function projectileOutOfScreenCallback() {
+		state = OFF_SCREEN;
+		new FlxTimer().start(Tweaking.projectileWaitOffScreen, function(_) {
+			state = MOVING_TOWARDS_PLAYER_FROM_OFF_SCREEN;
+			Reg.state.projectileSprite.setPosition(x, y);
+		});
 	}
 }
