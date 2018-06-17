@@ -296,16 +296,19 @@ class PlayState extends FlxState
 				}
 			}
 		}
+
+		if (FlxG.keys.justPressed.B || FlxG.keys.justPressed.NUMPADFIVE) {
+			debugCanvas.visible = !debugCanvas.visible;
+		}
+
+		if (FlxG.keys.justPressed.N) {
+			FlxNapeSpace.drawDebug = !FlxNapeSpace.drawDebug;
+		}
 		
 		if (FlxG.keys.justPressed.R && FlxG.keys.pressed.SHIFT) {
 			FlxG.resetGame();
 		} else if (FlxG.keys.justPressed.R) {
 			FlxG.switchState(new PlayState(levelId));
-		}
-		
-		if (FlxG.keys.justPressed.NUMPADFIVE)
-		{
-			debugCanvas.visible = !debugCanvas.visible;
 		}
 		#end
 
