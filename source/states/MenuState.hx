@@ -1,9 +1,7 @@
 package states;
 
-import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
-import flixel.util.FlxColor;
 
 class MenuState extends FlxState
 {

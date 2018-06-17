@@ -3,7 +3,7 @@ package;
 class Tweaking {
 	
 	//Game rules
-	public static inline var levelCount 				:Int			= 5;
+	public static inline var levelCount 				: Int			= 5;
 	
 	public static inline var projectileWaitOffScreen	: Float			= 1;
 	public static inline var projectileSpeed			: Int			= 1000;

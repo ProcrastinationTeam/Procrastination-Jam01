@@ -1,17 +1,12 @@
 package states;
 
 import flixel.util.FlxTimer;
-import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
 import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 
-/**
- * ...
- * @author LeRyokan
- */
 class IntroSubState extends FlxSubState 
 {
 

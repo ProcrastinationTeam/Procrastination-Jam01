@@ -6,14 +6,9 @@ import flixel.FlxSubState;
 import flixel.addons.nape.FlxNapeSpace;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
-import flixel.tweens.FlxTween;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.util.FlxColor;
 
-/**
- * ...
- * @author LeRyokan
- */
 class PauseSubState extends FlxSubState 
 {
 		// options //

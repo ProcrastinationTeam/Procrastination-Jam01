@@ -11,34 +11,25 @@ import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
-import flixel.FlxSubState;
-import flixel.addons.effects.FlxTrail;
 import flixel.addons.nape.FlxNapeSpace;
-import flixel.addons.nape.FlxNapeSprite;
 import flixel.effects.particles.FlxEmitter;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxSpriteGroup;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxAngle;
-import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxVector;
 import flixel.text.FlxText;
 import flixel.tile.FlxBaseTilemap.FlxTilemapAutoTiling;
 import flixel.tile.FlxTilemap;
-import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import lime.math.Vector2;
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
-import nape.callbacks.CbTypeList;
 import nape.callbacks.InteractionCallback;
 import nape.callbacks.InteractionListener;
 import nape.callbacks.InteractionType;
-import nape.dynamics.InteractionFilter;
-import nape.phys.Body;
 
 using flixel.util.FlxSpriteUtil;
 
@@ -606,7 +597,7 @@ class PlayState extends FlxState
 
 				var tileId  = tilemap.getTile(x, y);
 				var obstacleShape = null;
-				trace("ID :" + tilemap.getTile(x, y));
+				// trace("ID :" + tilemap.getTile(x, y));
 				switch (tileId) 
 				{
 					case -1:
