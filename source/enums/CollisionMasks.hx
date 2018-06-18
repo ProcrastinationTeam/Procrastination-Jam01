@@ -1,18 +1,18 @@
 package enums;
 
-enum abstract CollisionMasks(Int) from Int to Int {
+@:enum abstract CollisionMasks(Int) from Int to Int {
 
     // Targets collide with the projectile
-	var Target			= CollisionGroups.Target | CollisionGroups.Projectile;
+	var Target			= CollisionGroups.Projectile;
 
     // The projectile collides with targets and obstacles
-	var Projectile		= CollisionGroups.Target | CollisionGroups.Projectile | CollisionGroups.Obstacle;
+	var Projectile		= CollisionGroups.Target | CollisionGroups.Obstacle;
 
     // Obstacles collide with the projectile
-	var Obstacle        = CollisionGroups.Projectile | CollisionGroups.Obstacle;
+	var Obstacle        = CollisionGroups.Projectile;
 
     // The player collides with bullets
-	var Player  		= CollisionGroups.Player | CollisionGroups.Bullet;
+	var Player  		= CollisionGroups.Bullet;
 
     // Bullets collide with the player
 	var Bullet  		= CollisionGroups.Player | CollisionGroups.Bullet;

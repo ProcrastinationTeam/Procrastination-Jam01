@@ -1,6 +1,6 @@
 package enums;
 
-enum abstract CollisionGroups(Int) from Int to Int {
+@:enum abstract CollisionGroups(Int) from Int to Int {
 
     var Target 			=  1;
     var Projectile 		=  2;
