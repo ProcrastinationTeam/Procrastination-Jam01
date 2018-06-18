@@ -419,8 +419,10 @@ class PlayState extends FlxState
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Main Inputs
-		inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_TRIGGER || gamepad.justPressed.RIGHT_SHOULDER));
-		inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.LEFT_TRIGGER || gamepad.justPressed.LEFT_SHOULDER));
+		//OLD inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_SHOULDER));
+		inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.A));
+		//OLD inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.LEFT_SHOULDER));
+		inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.B));
 		inputPause = FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +442,8 @@ class PlayState extends FlxState
 			gamepad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
 			// TODO: monter la deadzone ?
 			gamepad.deadZone = 0.3;
-			var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
+		//	var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
+			var temp:FlxVector = FlxVector.get(gamepad.analog.value.LEFT_STICK_X, gamepad.analog.value.LEFT_STICK_Y).normalize();
 			if (Math.abs(temp.x) > gamepad.deadZone || Math.abs(temp.y) > gamepad.deadZone) {
 				playerTarget.set(player.x + temp.x * 500, player.y + temp.y * 500);
 			}
@@ -467,7 +470,7 @@ class PlayState extends FlxState
 		inputRight = 0;
 		var instantRotation:Float = 0;
 
-		if (useManualControls) {
+		if (!useManualControls) {
 			// METHOD 1: manual
 
 			if (FlxG.keys.pressed.Z) {
@@ -528,38 +531,25 @@ class PlayState extends FlxState
 			
 			instantRotation = (player.clockwise ? 1 : -1) * (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * elapsed * 360 / 60;
 		} else {
-			// METHOD 2: auto
-			if (FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.justPressed.B)) {
-				ActionChangeRotationDirection();
+			
+			// METHOD 2: TRIGGER
+			
+			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.pressed.RIGHT_TRIGGER)) {
+				var inp = gamepad.analog.value.RIGHT_TRIGGER;
+				//trace("INPUT C : " + inp);
+				
+				player.clockwise = true;
+				instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
+			
 			}
 			
-			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.justPressed.RIGHT_SHOULDER)) {
-				switch(player.speed) {
-					case SLOW:
-						player.speed = MEDIUM;
-					case MEDIUM:
-						player.speed = FAST;
-					case FAST:
-						//
-				}
-			} else if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.justPressed.LEFT_SHOULDER)) {
-				switch(player.speed) {
-					case SLOW:
-					case MEDIUM:
-						player.speed = SLOW;
-					case FAST:
-						player.speed = MEDIUM;
-				}
-			}
+			if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.pressed.LEFT_TRIGGER)) {
+				var inp = gamepad.analog.value.LEFT_TRIGGER;
+				//trace("INPUT CC : " + inp);
 				
-			instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
-			switch(player.speed) {
-				case SLOW:
-					instantRotation *= 0.75;
-				case MEDIUM:
-					instantRotation *= 1;
-				case FAST:
-					instantRotation *= 1.25;
+				player.clockwise = false;
+				instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
+			
 			}
 		}
 		
