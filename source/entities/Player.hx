@@ -1,5 +1,7 @@
 package entities;
 
+import enums.CollisionGroups;
+import enums.CollisionMasks;
 import enums.EntityType;
 import enums.PlayerSpeed;
 import flixel.FlxSprite;
@@ -38,8 +40,8 @@ class Player extends FlxNapeSprite {
 		this.body.userData.entityType = EntityType.PLAYER;
 		for (a in body.shapes) {
 			a.sensorEnabled = true;
-			a.filter.sensorGroup = 2;
-			//a.filter.sensorMask = 1;
+			a.filter.collisionMask = CollisionMasks.Player;
+			a.filter.collisionGroup = CollisionGroups.Player;
 		}
 		//var collisionFilter = new InteractionFilter(1,-1, 1, -1, 1, 1);
 		//this.body.setShapeFilters(collisionFilter);

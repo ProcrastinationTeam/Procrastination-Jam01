@@ -1,5 +1,7 @@
 package entities;
 
+import enums.CollisionGroups;
+import enums.CollisionMasks;
 import enums.EntityType;
 import enums.TargetType;
 import flixel.FlxG;
@@ -124,13 +126,12 @@ class Bullet extends FlxNapeSprite
 
 		this.body.velocity.set(velocity);
 		
-		for ( a in body.shapes)
-		{
+		for (a in body.shapes) {
 			a.sensorEnabled = true;
-			a.filter.collisionMask =  ~2;
+			a.filter.collisionMask = CollisionMasks.Bullet;
+			a.filter.collisionGroup = CollisionGroups.Bullet;
 			a.filter.sensorMask =  2;
 			a.filter.sensorGroup =  1;
-			
 		}
 		
 		playerInstance = player;
