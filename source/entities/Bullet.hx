@@ -7,15 +7,10 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.math.FlxMath;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import nape.callbacks.InteractionType;
-import nape.dynamics.InteractionFilter;
 import nape.geom.Vec2;
 import nape.phys.BodyList;
 import nape.phys.BodyType;
 
-/**
- * ...
- * @author LeRyokan
- */
 class Bullet extends FlxNapeSprite 
 {
 	

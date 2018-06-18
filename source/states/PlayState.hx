@@ -108,11 +108,11 @@ class PlayState extends FlxState
 	public var inputRight					: Float = 0;
 
 	// Vectors
-	public var movementVector:FlxVector = new FlxVector();
-	public var vectorPlayerToTarget:FlxVector = new FlxVector();
-	public var vectorProjectileToPlayer:FlxVector = new FlxVector();
-	public var vectorProjectileSpriteToPlayer:FlxVector = new FlxVector();
-	public var vectorProjectileToTarget:FlxVector = new FlxVector();
+	public var movementVector					: FlxVector = new FlxVector();
+	public var vectorPlayerToTarget				: FlxVector = new FlxVector();
+	public var vectorProjectileToPlayerSide		: FlxVector = new FlxVector();
+	public var vectorProjectileSpriteToPlayer	: FlxVector = new FlxVector();
+	public var vectorProjectileToTarget			: FlxVector = new FlxVector();
 
 	override public function new(levelid:Int):Void {
 		super();
@@ -182,7 +182,7 @@ class PlayState extends FlxState
 		islandSprite.x -= islandSprite.width / 2;
 		islandSprite.y -= islandSprite.height / 2;
 		
-		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2, false,true);
+		player = new Player(railSprite.x, railSprite.y + railSprite.height / 2);
 		
 		playerCrosshair = new FlxSprite(0, 0);
 		playerCrosshair.scale.set(2, 2);
@@ -344,7 +344,7 @@ class PlayState extends FlxState
 					// COME BACK !
 					playerArrowIndicator.visible = false;
 					projectile.state = MOVING_TOWARDS_PLAYER;
-					projectile.body.velocity.setxy(vectorProjectileToPlayer.x * Tweaking.projectileSpeed, vectorProjectileToPlayer.y * Tweaking.projectileSpeed);
+					projectile.body.velocity.setxy(vectorProjectileToPlayerSide.x * Tweaking.projectileSpeed, vectorProjectileToPlayerSide.y * Tweaking.projectileSpeed);
 				default:
 					// DO NOTHING!
 			}
@@ -361,7 +361,7 @@ class PlayState extends FlxState
 				playerArrowIndicator.origin.set(0, playerArrowIndicator.height/2);
 			}
 			
-			var angleToPlayer = Math.atan2(0.0, 1.0) - Math.atan2(vectorProjectileToPlayer.y, vectorProjectileToPlayer.x);				
+			var angleToPlayer = Math.atan2(0.0, 1.0) - Math.atan2(vectorProjectileToPlayerSide.y, vectorProjectileToPlayerSide.x);				
 			playerArrowIndicator.angle =  -FlxAngle.asDegrees(angleToPlayer);
 		}
 		
@@ -572,7 +572,7 @@ class PlayState extends FlxState
 				playerTarget.y - player.y)
 			.normalize();
 													
-		vectorProjectileToPlayer.set(		
+		vectorProjectileToPlayerSide.set(		
 				player.getGraphicMidpoint().x - (projectile.x + projectile.width / 2), 
 				player.getGraphicMidpoint().y - (projectile.y + projectile.height / 2))
 			.normalize();

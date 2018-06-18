@@ -4,5 +4,8 @@
 		"export/**/*.hx": true
 	},
 	"lime.defaultBuildConfiguration": "Debug",
-	"lime.defaultTarget": "Neko"
+	"lime.defaultTarget": "HTML5",
+
+	// "haxe.enableCodeLens": true,
+	// "haxe.enableMethodsView": true,
 }

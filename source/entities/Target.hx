@@ -1,19 +1,15 @@
 package entities;
 
+import enums.CollisionGroups;
 import enums.EntityType;
 import enums.TargetType;
-import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.addons.nape.FlxNapeSprite;
-import flixel.addons.nape.FlxNapeVelocity;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxAngle;
-import flixel.math.FlxMath;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxTimer;
-import nape.geom.Vec2;
-import nape.phys.BodyType;
-import nape.shape.Circle;
+import enums.CollisionMasks;
 
 class Target extends FlxNapeSprite 
 {
@@ -53,12 +49,11 @@ class Target extends FlxNapeSprite
 	
 		cooldown = new FlxTimer();
 		
-		for ( a in body.shapes)
-		{
-			a.filter.collisionMask = 2;
-			a.filter.collisionGroup = 2;
-			a.filter.sensorGroup = 2;
-			a.filter.sensorMask = 2;
+		for (a in body.shapes) {
+			a.filter.collisionMask = CollisionMasks.Target;
+			a.filter.collisionGroup = CollisionGroups.Target;
+			// a.filter.sensorGroup = 2;
+			// a.filter.sensorMask = 2;
 		}
 	}
 	
@@ -99,15 +94,16 @@ class Target extends FlxNapeSprite
 	}
 	
 	public function explode() {
-		
-		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"UP");
-		projectiles.add(bullet);
-		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"DOWN");
-		projectiles.add(bullet);
-		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,"LEFT");
-		projectiles.add(bullet);
-		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type, "RIGHT");
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type, "UP");
 		projectiles.add(bullet);
 
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type, "DOWN");
+		projectiles.add(bullet);
+
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type, "LEFT");
+		projectiles.add(bullet);
+
+		bullet = new Bullet(this.getMidpoint().x, this.getMidpoint().y, "assets/images/bullet.png", false, true, _player, _type,  "RIGHT");
+		projectiles.add(bullet);
 	}
 }

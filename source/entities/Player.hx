@@ -3,18 +3,13 @@ package entities;
 import enums.EntityType;
 import enums.PlayerSpeed;
 import flixel.FlxSprite;
-import flixel.addons.nape.FlxNapeSpace;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxSpriteGroup;
-import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxTimer;
 import nape.callbacks.InteractionType;
-import nape.dynamics.InteractionFilter;
 import nape.phys.BodyType;
-import nape.shape.Circle;
 
-class Player extends FlxNapeSprite 
-{
+class Player extends FlxNapeSprite {
 		
 	public var comboMultiplier				: Int 				= 0;
 	public var speed 						: PlayerSpeed 		= PlayerSpeed.MEDIUM;
@@ -28,28 +23,26 @@ class Player extends FlxNapeSprite
 	public var isVunerable					: Bool				= true;
 
 	
-	public function new(X:Float = 0, Y:Float = 0, CreateRectangularBody:Bool = true, EnablePhysics:Bool = true)
-	{
-		super(X + 60 , Y + 60, CreateRectangularBody, EnablePhysics);
+	public function new(X:Float = 0, Y:Float = 0) {
+		super(X + 60 , Y + 60);
+		
 		this.loadGraphic("assets/images/playerSprite.png", true, 32, 32);
 		this.animation.add("idle", [0], 30);
 		this.animation.add("infinity", [1], 30);
-		this.animation.play("idle");
-		
+		this.animation.play("infinity");
 		
 		this.createCircularBody(16, BodyType.DYNAMIC);
+		this.physicsEnabled = true;
 		this.body.allowMovement = true;
 		this.body.allowRotation = true;
 		this.body.userData.entityType = EntityType.PLAYER;
-		for ( a in body.shapes) {
+		for (a in body.shapes) {
 			a.sensorEnabled = true;
 			a.filter.sensorGroup = 2;
 			//a.filter.sensorMask = 1;
 		}
 		//var collisionFilter = new InteractionFilter(1,-1, 1, -1, 1, 1);
 		//this.body.setShapeFilters(collisionFilter);
-		
-		
 		
 		updateLifeHUD();
 	}
@@ -63,15 +56,13 @@ class Player extends FlxNapeSprite
 		//
 	//}
 	
-	override public function update(elapsed:Float)
-	{
+	override public function update(elapsed:Float) {
 		super.update(elapsed);
 		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
 	//	trace("SENSOR:" + yolo.length);
 	}
 	
-	public function updateLifeHUD()
-	{
+	public function updateLifeHUD()	{
 		lifeIcons.clear();
 		for (i in 0...life)
 		{
@@ -81,26 +72,22 @@ class Player extends FlxNapeSprite
 	}
 	
 	
-	public function addLife()
-	{
+	public function addLife() {
 		life+= 1;
 		updateLifeHUD();
 	}
 	
-	public function LooseLife()
-	{
+	public function LooseLife() {
 		life-= 1;
 		updateLifeHUD();
 	}
 	
-	public function addScore(value :Int)
-	{
+	public function addScore(value :Int) {
 		Reg.score += value;
 	}
 	
 	
-	public function LooseScore(value :Int)
-	{
+	public function LooseScore(value :Int) {
 		Reg.score -= value;
 	}
 	
