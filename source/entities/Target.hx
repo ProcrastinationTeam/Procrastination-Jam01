@@ -8,6 +8,7 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.math.FlxAngle;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxPool;
 import flixel.util.FlxTimer;
 import enums.CollisionMasks;
 
@@ -26,6 +27,9 @@ class Target extends FlxNapeSprite
 	public var bullet				: FlxNapeSprite;
 	public var cooldown 			: FlxTimer;
 	public var canShoot 			: Bool = true;
+	
+	//public var poolOfBullet			:FlxPool; 
+	
 	
 	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, InitialRotation:Float = 0, id:Int, type:TargetType, player:Player ) {
 		super(X, Y);

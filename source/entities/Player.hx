@@ -17,7 +17,7 @@ class Player extends FlxNapeSprite {
 	public var speed 						: PlayerSpeed 		= PlayerSpeed.MEDIUM;
 	public var rpm 							: Float 			= Tweaking.playerRpmBase;
 	public var clockwise				 	: Bool 				= true;
-	public var life							: Int 				= 100;
+	public var life							: Int 				= 3;
 	public var lifeIcons					: FlxSpriteGroup 	= new FlxSpriteGroup();
 	public var dashing						: Bool 				= false;
 	public var canDash						: Bool 				= true;
@@ -30,8 +30,8 @@ class Player extends FlxNapeSprite {
 		
 		this.loadGraphic("assets/images/playerSprite.png", true, 32, 32);
 		this.animation.add("idle", [0], 30);
-		this.animation.add("infinity", [1], 30);
-		this.animation.play("infinity");
+		this.animation.add("invunerability", [1], 30);
+		this.animation.play("idle");
 		
 		this.createCircularBody(16, BodyType.DYNAMIC);
 		this.physicsEnabled = true;
@@ -40,6 +40,7 @@ class Player extends FlxNapeSprite {
 		this.body.userData.entityType = EntityType.PLAYER;
 		for (a in body.shapes) {
 			a.sensorEnabled = true;
+			a.filter.sensorGroup = 2;
 			a.filter.collisionMask = CollisionMasks.Player;
 			a.filter.collisionGroup = CollisionGroups.Player;
 		}
@@ -61,7 +62,7 @@ class Player extends FlxNapeSprite {
 	override public function update(elapsed:Float) {
 		super.update(elapsed);
 		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
-	//	trace("SENSOR:" + yolo.length);
+		trace("SENSOR:" + yolo.length);
 	}
 	
 	public function updateLifeHUD()	{
@@ -96,7 +97,7 @@ class Player extends FlxNapeSprite {
 	public function invulnerabilityUp() {
 		isVunerable = false;
 		var timer = new FlxTimer();
-		this.animation.play("infinity");
+		this.animation.play("invunerability");
 		timer.start(3.0, invulnerabilityDisable, 1);
 	}
 	

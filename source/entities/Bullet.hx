@@ -153,12 +153,15 @@ class Bullet extends FlxNapeSprite
 		if (this.x > FlxG.width || this.x < 0 || this.y > FlxG.height || this.y < 0)
 		{
 			this.kill();
+			Reg.state.remove(this);
+			//this.destroy();
 		}
 		
 		var yolo = body.interactingBodies(InteractionType.SENSOR, -1);
 		if (yolo.length > 1)
 		{
 			this.kill();
+			Reg.state.remove(this);
 			if (playerInstance.isVunerable)
 			{
 				playerInstance.invulnerabilityUp();

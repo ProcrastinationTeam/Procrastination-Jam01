@@ -1,5 +1,7 @@
 package states;
 
+import entities.InputHandler;
+import entities.Level;
 import entities.Obstacle;
 import entities.Player;
 import entities.Projectile;
@@ -30,6 +32,7 @@ import nape.callbacks.CbType;
 import nape.callbacks.InteractionCallback;
 import nape.callbacks.InteractionListener;
 import nape.callbacks.InteractionType;
+import openfl.display.FPS;
 
 using flixel.util.FlxSpriteUtil;
 
@@ -83,6 +86,10 @@ class PlayState extends FlxState
 	public var levelText 					: FlxText;
 	public var lifeIcons					: FlxSpriteGroup = new FlxSpriteGroup();
 	
+	public var fpsCounter 					:FlxText;
+	public var fps							:FPS;
+	public var fpsValue						:Int;
+	
 	//Tilemap for level design
 	public var tilemap						: FlxTilemap = new FlxTilemap();
 	public var levelId						: Int;
@@ -106,6 +113,9 @@ class PlayState extends FlxState
 
 	public var inputDown					: Float = 0;
 	public var inputRight					: Float = 0;
+	
+	public var inputHandler					: InputHandler;
+	
 
 	// Vectors
 	public var movementVector					: FlxVector = new FlxVector();
@@ -125,6 +135,9 @@ class PlayState extends FlxState
 		
 		Reg.state = this;
 		
+		//Input init
+		inputHandler = new InputHandler(0);
+		
 		// Nape init
 		FlxNapeSpace.init();
 		//FlxNapeSpace.createWalls(0, 0, 900, 900);
@@ -140,8 +153,6 @@ class PlayState extends FlxState
 		pauseText.setPosition(FlxG.width / 2 - (pauseText.width / 2), FlxG.height / 3);
 		pauseText.set_visible(false);
 		
-		
-		
 		levelText = new FlxText(0, FlxG.height / 2 , 0, "Level " + levelId, 24);
 		levelText.setFormat("assets/images/b.ttf", 36);
 		levelText.set_visible(true);
@@ -153,12 +164,10 @@ class PlayState extends FlxState
 		levelIntroSprite.animation.play("anim");
 		FlxTween.tween(levelIntroSprite, {x:FlxG.width / 2 - levelIntroSprite.width / 2}, 0.4, {onComplete: tweenOutSpr});
 		
-		
 		scoreText = new FlxText(900, 0, 0, "Score : 0", 24);
 		scoreText.setFormat("assets/images/v.ttf", 36);
 		scoreText.set_visible(true);
 		FlxTween.tween(scoreText, {x: FlxG.width - 250}, 0.3);
-		
 		
 		healthText = new FlxText( -100, 0, 0, "Life", 24);
 		healthText.setFormat("assets/images/v.ttf", 36);
@@ -212,6 +221,11 @@ class PlayState extends FlxState
 		debugCanvas = new FlxSprite();
 		debugCanvas.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
 		
+		fps = new FPS();
+		
+		
+		fpsCounter = new FlxText(0, FlxG.height - 50,0,"FPS : " + fps.currentFPS ,8);
+		
 		rightVector = FlxVector.get(radius, 0);
 		rightVectorPerpendicular = FlxVector.get(0, radius);
 
@@ -221,13 +235,17 @@ class PlayState extends FlxState
 		
 		
 		// EARLY TILEMAP
-		createLevel(levelPath);
+		var level = new Level(levelPath,player);
+		tilemap = level.tilemap;
+		obstacles = level.obstacles;
+		targets= level.targets;
+		//createLevel(levelPath);
 
 		
 		
 		add(railSprite);
 		add(islandSprite);
-	//	add(tilemap);
+		//add(tilemap);
 		add(obstacles);
 		add(targets);
 		for (t in targets)
@@ -268,6 +286,8 @@ class PlayState extends FlxState
 		FlxNapeSpace.drawDebug = true;
 		
 		add(debugCanvas);
+		
+		add(fpsCounter);
 		#end
 		
 		FlxG.mouse.visible = false;
@@ -276,7 +296,8 @@ class PlayState extends FlxState
 	
 	override public function update(elapsed:Float):Void	{
 		super.update(elapsed);
-		
+		fpsValue = fps.currentFPS;
+		fpsCounter.text = "FPS : " + fpsValue;
 		updateInputs(elapsed);
 		
 		elapsedTime += elapsed;
@@ -315,7 +336,7 @@ class PlayState extends FlxState
 		playerCrosshair.angle += elapsed * 50;
 
 		if (inputPause) {
-			pauseSubstate = new PauseSubState(FlxColor.BLUE);
+			pauseSubstate = new PauseSubState(FlxColor.BLUE,inputHandler);
 			closeSubState();
 			openSubState(pauseSubstate);
 		}
@@ -420,10 +441,10 @@ class PlayState extends FlxState
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Main Inputs
 		//OLD inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.RIGHT_SHOULDER));
-		inputAction = FlxG.mouse.justPressed || (gamepad != null && (gamepad.justPressed.A));
+		inputAction = FlxG.mouse.justPressed || (gamepad != null && gamepad.anyJustPressed(inputHandler.fire));
 		//OLD inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.LEFT_SHOULDER));
-		inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && (gamepad.justPressed.B));
-		inputPause = FlxG.keys.justPressed.P || (gamepad != null && gamepad.justPressed.START);
+		inputDash = FlxG.keys.justPressed.SPACE || (gamepad != null && gamepad.anyJustPressed(inputHandler.dash));
+		inputPause = FlxG.keys.justPressed.P || (gamepad != null && gamepad.anyJustPressed(inputHandler.pause));
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Target inputs
@@ -442,7 +463,7 @@ class PlayState extends FlxState
 			gamepad.deadZoneMode = FlxGamepadDeadZoneMode.CIRCULAR;
 			// TODO: monter la deadzone ?
 			gamepad.deadZone = 0.3;
-		//	var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
+			//	var temp:FlxVector = FlxVector.get(gamepad.analog.value.RIGHT_STICK_X, gamepad.analog.value.RIGHT_STICK_Y).normalize();
 			var temp:FlxVector = FlxVector.get(gamepad.analog.value.LEFT_STICK_X, gamepad.analog.value.LEFT_STICK_Y).normalize();
 			if (Math.abs(temp.x) > gamepad.deadZone || Math.abs(temp.y) > gamepad.deadZone) {
 				playerTarget.set(player.x + temp.x * 500, player.y + temp.y * 500);
@@ -534,7 +555,8 @@ class PlayState extends FlxState
 			
 			// METHOD 2: TRIGGER
 			
-			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.pressed.RIGHT_TRIGGER)) {
+		//	if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.pressed.RIGHT_TRIGGER)) {
+			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.anyPressed(inputHandler.moveClockwise))) {
 				var inp = gamepad.analog.value.RIGHT_TRIGGER;
 				//trace("INPUT C : " + inp);
 				
@@ -543,7 +565,7 @@ class PlayState extends FlxState
 			
 			}
 			
-			if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.pressed.LEFT_TRIGGER)) {
+			if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.anyPressed(inputHandler.moveCounterClockwise))){
 				var inp = gamepad.analog.value.LEFT_TRIGGER;
 				//trace("INPUT CC : " + inp);
 				

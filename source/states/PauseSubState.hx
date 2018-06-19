@@ -1,5 +1,6 @@
 package states;
 
+import entities.InputHandler;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
@@ -30,41 +31,52 @@ class PauseSubState extends FlxSubState
 	public var spriteToTween:FlxSprite;
 	public var textToTween:FlxText;
 	
+	
+	// BACK END SERVICE INFO
 	public var highlightSelection : Int;
-	public var optionsName : Array<String>;
-	public var optionsNameF : Map<String,String->Void>;
-	public var videoOptionsName : Array<String>;
-	public var videoOptionsNameF : Map<String,String->Void>;
-	public var audioOptionsName : Array<String>;
-	public var audioOptionsNameF : Map<String,String->Void>;
+	public var optionsNameLabel : Array<String>;
+	public var optionsFunction : Map<String,String->Void>;
+	public var videoOptionsNameLabel : Array<String>;
+	public var videoOptionsFunction : Map<String,String->Void>;
+	public var audioOptionsNameLabel : Array<String>;
+	public var audioOptionsFunction : Map<String,String->Void>;
 	
-	public var gameOptionsName : Array<String>;
-	public var gameOptionsNameF : Map<String,String->Void>;
+	public var gameOptionsNameLabel : Array<String>;
+	public var gameOptionsFunction : Map<String,String->Void>;
 	
+	
+	// TEXT TO SHOW
 	public var menuText: FlxTypedGroup<FlxText>;
 	public var gameOptionsText: FlxTypedGroup<FlxText>;
 	public var videoOptionsText: FlxTypedGroup<FlxText>;
 	public var audioOptionsText: FlxTypedGroup<FlxText>;
 	
+	
+	// CURRENT MENU INFO
 	public var currentOptionsText:FlxTypedGroup<FlxText>;
 	public var currentOptionsFunctions:Map<String,String->Void>;
 	
 	public var breadcrumb:Array<String>;
 	
+	
+	//Usefull for change in settings
+	var _inputHandler : InputHandler;
+	
+	
 	public function initAudioOptions()
 	{
 		audioOptionsText = new FlxTypedGroup<FlxText>();
 
-		audioOptionsName = ["Mute sound", "Audio", "Remove insult"];
-		audioOptionsNameF = new Map<String,String->Void>();
-		audioOptionsNameF["Mute sound"] = muteGame;
-		audioOptionsNameF["Audio"] = resumeGame;
-		audioOptionsNameF["Remove insult"] = resumeGame;
+		audioOptionsNameLabel = ["Mute sound", "Audio", "Remove insult"];
+		audioOptionsFunction = new Map<String,String->Void>();
+		audioOptionsFunction[audioOptionsNameLabel[0]] = muteGame;
+		audioOptionsFunction[audioOptionsNameLabel[1]] = resumeGame;
+		audioOptionsFunction[audioOptionsNameLabel[2]] = resumeGame;
 		
 		var posX = FlxG.width/2;
 		var posY = FlxG.height / 2;
 		
-		for (name in audioOptionsName) {
+		for (name in audioOptionsNameLabel) {
 			audioOptionsText.add(new FlxText(posX, posY, 0, name, 12));
 			posY += 20;		
 		}
@@ -78,14 +90,14 @@ class PauseSubState extends FlxSubState
 	{
 		videoOptionsText = new FlxTypedGroup<FlxText>();
 		
-		videoOptionsName = ["Fullscreen mode"];
-		videoOptionsNameF = new Map<String,String->Void>();
-		videoOptionsNameF["Fullscreen mode"] = fullscreenMode;
+		videoOptionsNameLabel = ["Fullscreen mode"];
+		videoOptionsFunction = new Map<String,String->Void>();
+		videoOptionsFunction[videoOptionsNameLabel[0]] = fullscreenMode;
 		
 		var posX = FlxG.width / 2;
 		var posY = FlxG.height / 2;
 		
-		for (name in videoOptionsName) {
+		for (name in videoOptionsNameLabel) {
 			videoOptionsText.add(new FlxText(posX, posY, 0, name, 12));
 			posY += 20;		
 		}
@@ -98,15 +110,16 @@ class PauseSubState extends FlxSubState
 	{
 		gameOptionsText = new FlxTypedGroup<FlxText>();
 		
-		gameOptionsName = ["Difficulty", "bonus"];
-		gameOptionsNameF = new Map<String,String->Void>();
-		gameOptionsNameF["Difficulty"] = difficultyUp;
-		gameOptionsNameF["bonus"] = exitGame;
+		gameOptionsNameLabel = ["Control","Difficulty", "bonus"];
+		gameOptionsFunction = new Map<String,String->Void>();
+		gameOptionsFunction[gameOptionsNameLabel[0]] = changeControl;
+		gameOptionsFunction[gameOptionsNameLabel[1]] = difficultyUp;
+		gameOptionsFunction[gameOptionsNameLabel[2]] = exitGame;
 		
 		var posX = FlxG.width / 2;
 		var posY = FlxG.height / 2;
 		
-		for (name in gameOptionsName) {
+		for (name in gameOptionsNameLabel) {
 			gameOptionsText.add(new FlxText(posX, posY, 0, name, 12));
 			posY += 20;		
 		}
@@ -115,34 +128,36 @@ class PauseSubState extends FlxSubState
 		gameOptionsText.visible = false;
 	}
 	
-	public function new(BGColor:FlxColor=FlxColor.TRANSPARENT) 
+	public function new(BGColor:FlxColor=FlxColor.TRANSPARENT, inputHandler : InputHandler) 
 	{
 		super(BGColor);
+		_inputHandler = inputHandler;
 		breadcrumb = new Array<String>();
 		menuText = new FlxTypedGroup<FlxText>();
 		currentOptionsText = new FlxTypedGroup<FlxText>();
 		
-		optionsName = ["resume", "game_options", "video_options", "audio_options", "quit"];
+
+		optionsNameLabel = ["resume", "controles", "video_options", "audio_options", "quit"];
 		
-		optionsNameF = new Map<String,String->Void>();
-		optionsNameF["resume"] =  resumeGame;
-		optionsNameF["game_options"] =  changeMenu;
-		optionsNameF["video_options"] =  changeMenu;
-		optionsNameF["audio_options"] =  changeMenu;
-		optionsNameF["quit"] =  exitGame;
+		optionsFunction = new Map<String,String->Void>();
+		optionsFunction[optionsNameLabel[0]] =  resumeGame;
+		optionsFunction[optionsNameLabel[1]] =  changeMenu;
+		optionsFunction[optionsNameLabel[2]] =  changeMenu;
+		optionsFunction[optionsNameLabel[3]] =  changeMenu;
+		optionsFunction[optionsNameLabel[4]] =  exitGame;
 		
 		var posX = FlxG.width/2;
 		var posY = FlxG.height/2;
 		highlightSelection = 0;
 		
-		for (name in optionsName) {
+		for (name in optionsNameLabel) {
 			menuText.add(new FlxText(posX, posY, 0, name, 12));
 			posY += 20;		
 		}
 		menuText.members[highlightSelection].color = FlxColor.YELLOW;
 		
 		currentOptionsText = menuText;
-		currentOptionsFunctions = optionsNameF;
+		currentOptionsFunctions = optionsFunction;
 		
 		// Init sous menu
 		initGameOptions();
@@ -272,41 +287,49 @@ class PauseSubState extends FlxSubState
 		trace("STRING " + s);
 		var optionChoose = "";
 		
-		if (s == "game_options")
+		if (s == optionsNameLabel[1])
 		{
 			currentOptionsText = gameOptionsText;
-			currentOptionsFunctions = gameOptionsNameF;
-			optionChoose = "game_options";
+			currentOptionsFunctions = gameOptionsFunction;
+			optionChoose = "controles";
 			menuText.visible = !menuText.visible;
 			currentOptionsText.visible = !currentOptionsText.visible;
 		}
 		
-		if (s == "video_options")
+		if (/*s == "video_options" || */ s == optionsNameLabel[2])
 		{
 			currentOptionsText = videoOptionsText;
-			currentOptionsFunctions = videoOptionsNameF;
+			currentOptionsFunctions = videoOptionsFunction;
 			optionChoose = "video_options";
 			menuText.visible = !menuText.visible;
 			currentOptionsText.visible = !currentOptionsText.visible;
 		}
 		
-		if (s == "audio_options")
+		if (s == optionsNameLabel[3])
 		{
 			currentOptionsText = audioOptionsText;
-			currentOptionsFunctions = audioOptionsNameF;
+			currentOptionsFunctions = audioOptionsFunction;
 			optionChoose = "audio_options";
 			menuText.visible = !menuText.visible;
 			currentOptionsText.visible = !currentOptionsText.visible;
 		}
 
 		// Little bit hardcoded
-		if (s == "return_parent" && !menuText.visible)
+		if (s == "return_parent")
 		{
-			highlightSelection = 0;
-			currentOptionsFunctions = optionsNameF;
-			currentOptionsText.visible = !currentOptionsText.visible;
-			currentOptionsText = menuText;
-			menuText.visible = true;
+			if (!menuText.visible)
+			{
+				highlightSelection = 0;
+				currentOptionsFunctions = optionsFunction;
+				currentOptionsText.visible = !currentOptionsText.visible;
+				currentOptionsText = menuText;
+				menuText.visible = true;
+			}
+			else
+			{
+				resumeGame("");
+			}
+			
 		}
 
 		// hardcoded too...
@@ -327,18 +350,8 @@ class PauseSubState extends FlxSubState
 		breadcrumb.push(optionName);
 
 		trace("OPTIONS :" +  optionName);
-		if (StringTools.endsWith(optionName,"options"))
-		{	
-			trace("SPECIAL MOVE ");
-			highlightSelection = 0;
-			currentOptionsFunctions[optionName](optionName);		
-		}
-		else
-		{
-			currentOptionsFunctions[optionName]("");
-			return;
-		}
-		
+		highlightSelection = 0;
+		currentOptionsFunctions[optionName](optionName);		
 	}
 	
 	public function muteGame(s: String): Void {
@@ -360,5 +373,18 @@ class PauseSubState extends FlxSubState
 		super.close();
 	}
 	
+	public function changeControl(s: String): Void {
+		
+		if (_inputHandler.idPreset + 1 > 2)
+		{
+			_inputHandler.setPreset(0);
+		}
+		else
+		{
+			_inputHandler.setPreset(_inputHandler.idPreset + 1);
+		}
+		trace("PRESET SELECT : " + _inputHandler.idPreset); 
+		
+	}
 	
 }
