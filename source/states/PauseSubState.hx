@@ -67,11 +67,11 @@ class PauseSubState extends FlxSubState
 	{
 		audioOptionsText = new FlxTypedGroup<FlxText>();
 
-		audioOptionsNameLabel = ["Mute sound", "Audio", "Remove insult"];
+		audioOptionsNameLabel = ["Mute sound", "Audio"];
 		audioOptionsFunction = new Map<String,String->Void>();
 		audioOptionsFunction[audioOptionsNameLabel[0]] = muteGame;
 		audioOptionsFunction[audioOptionsNameLabel[1]] = resumeGame;
-		audioOptionsFunction[audioOptionsNameLabel[2]] = resumeGame;
+		
 		
 		var posX = FlxG.width/2;
 		var posY = FlxG.height / 2;
@@ -110,7 +110,7 @@ class PauseSubState extends FlxSubState
 	{
 		gameOptionsText = new FlxTypedGroup<FlxText>();
 		
-		gameOptionsNameLabel = ["Control","Difficulty", "bonus"];
+		gameOptionsNameLabel = ["Change Control","Difficulty Up", "Bonus"];
 		gameOptionsFunction = new Map<String,String->Void>();
 		gameOptionsFunction[gameOptionsNameLabel[0]] = changeControl;
 		gameOptionsFunction[gameOptionsNameLabel[1]] = difficultyUp;
@@ -137,7 +137,7 @@ class PauseSubState extends FlxSubState
 		currentOptionsText = new FlxTypedGroup<FlxText>();
 		
 
-		optionsNameLabel = ["resume", "controles", "video_options", "audio_options", "quit"];
+		optionsNameLabel = ["Resume", "Controls", "Video Settings", "Audio Settings", "Quit"];
 		
 		optionsFunction = new Map<String,String->Void>();
 		optionsFunction[optionsNameLabel[0]] =  resumeGame;

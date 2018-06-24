@@ -1,5 +1,6 @@
 package states;
 
+import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxTimer;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
@@ -9,7 +10,7 @@ import flixel.util.FlxColor;
 
 class IntroSubState extends FlxSubState 
 {
-
+	public var triggerSignal:FlxTypedSignal<Bool->Void>;
 	public var spriteToTween:FlxSprite;
 	public var textToTween:FlxText;
 	
@@ -17,6 +18,7 @@ class IntroSubState extends FlxSubState
 	{
 		super(BGColor);
 		//this._parentState.persistentUpdate = false;
+		triggerSignal = new FlxTypedSignal<Bool->Void>();
 		spriteToTween = sprite;
 		textToTween = text;
 	}
@@ -43,7 +45,11 @@ class IntroSubState extends FlxSubState
 	
 	public function endSubstate(tween:FlxTween):Void
 	{
+		//_parentState.
 		_parentState.persistentUpdate = true;
+		var trigger = true;
+		triggerSignal.dispatch(trigger);
+		close();
 	}
 	
 }

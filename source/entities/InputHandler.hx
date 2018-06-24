@@ -32,7 +32,7 @@ class InputHandler
 		{
 			case 0:
 				pause = [FlxGamepadInputID.START];
-				dash = [FlxGamepadInputID.B];
+				dash = [FlxGamepadInputID.X];
 				fire = [FlxGamepadInputID.A];
 				moveClockwise = [FlxGamepadInputID.LEFT_TRIGGER];
 				moveCounterClockwise = [FlxGamepadInputID.RIGHT_TRIGGER];
@@ -40,7 +40,7 @@ class InputHandler
 				//moveCrosshairY
 			case 1:
 				pause = [FlxGamepadInputID.START];
-				dash = [FlxGamepadInputID.A];
+				dash = [FlxGamepadInputID.Y];
 				fire = [FlxGamepadInputID.B];
 				moveClockwise = [FlxGamepadInputID.LEFT_TRIGGER];
 				moveCounterClockwise = [FlxGamepadInputID.RIGHT_TRIGGER];

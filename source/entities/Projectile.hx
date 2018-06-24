@@ -2,6 +2,7 @@ package entities;
 
 import enums.CollisionGroups;
 import enums.CollisionMasks;
+import flixel.addons.effects.FlxTrail;
 import flixel.addons.util.FlxFSM;
 import flixel.FlxG;
 import flixel.math.FlxMath;
@@ -17,6 +18,9 @@ class Projectile extends FlxNapeSprite
 	public var state				: ProjectileState		= ProjectileState.ON_PLAYER;
 
 	public var fsm					: FlxFSM<Projectile>;
+	
+	// Fancy graphics
+	public var trail				: FlxTrail;
 	
 	public function new(X:Float=0, Y:Float=0, ?SimpleGraphic:FlxGraphicAsset) {
 		super(X, Y);
@@ -55,6 +59,12 @@ class Projectile extends FlxNapeSprite
 		// 	.add(OnSticky, MovingTowardsPlayer, Conditions.comeBack)
 		// 	.add(OnTarget, OnPlayer, Conditions.onPlayer)
 		// 	.start(OnPlayer);
+		
+		
+		
+		// Trail Test 
+		trail = new FlxTrail(this, null, 10, 0, 0.8, 0.05);
+		
 	}
 	
 	override public function update(elpased: Float) {

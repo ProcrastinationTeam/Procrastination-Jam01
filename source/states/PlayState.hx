@@ -13,6 +13,7 @@ import enums.TargetType;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxG;
+import flixel.addons.effects.FlxTrail;
 import flixel.addons.nape.FlxNapeSpace;
 import flixel.effects.particles.FlxEmitter;
 import flixel.group.FlxGroup.FlxTypedGroup;
@@ -107,6 +108,8 @@ class PlayState extends FlxState
 
 
 	// Inputs => va aller dans player => FlxAction
+	public var playerCanPlay                :Bool = false;
+	
 	public var inputAction					: Bool = false;
 	public var inputDash					: Bool = false;
 	public var inputPause					: Bool = false;
@@ -134,6 +137,9 @@ class PlayState extends FlxState
 		super.create();
 		
 		Reg.state = this;
+		
+		//var tempState = new IntroSubState();
+		
 		
 		//Input init
 		inputHandler = new InputHandler(0);
@@ -232,7 +238,7 @@ class PlayState extends FlxState
 		
 		// CREATION OF SUBSTATES
 		substate = new IntroSubState(FlxColor.TRANSPARENT,levelIntroSprite,levelText);
-		
+		substate.triggerSignal.add(substateTriggerHandler);
 		
 		// EARLY TILEMAP
 		var level = new Level(levelPath,player);
@@ -262,13 +268,15 @@ class PlayState extends FlxState
 		
 		add(projectileSprite);
 		add(projectileSpriteTrail);
+		add(projectile.trail);
+		
 		
 		
 		//ADD UI
 		add(levelIntroSprite);
 		add(playerCrosshair);
 		add(playerArrowIndicator);
-		add(pauseText);
+		//add(pauseText);
 		add(levelText);
 		add(scoreText);
 		add(healthText);
@@ -436,6 +444,8 @@ class PlayState extends FlxState
 	}
 
 	public function updateInputs(elapsed:Float) {
+		if (playerCanPlay)
+		{
 		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -598,56 +608,9 @@ class PlayState extends FlxState
 				playerTarget.x - (projectile.x + projectile.width / 2),
 				playerTarget.y - (projectile.y + projectile.height / 2))
 			.normalize();
+		}
 	}
 	
-	public function createLevel(levelPath : String)
-	{
-		tilemap.loadMapFromCSV(levelPath, "assets/images/tiles.png", 32, 32, FlxTilemapAutoTiling.OFF);
-		var offsetw = 20 + FlxG.width / 2 - tilemap.width / 2;
-		var offseth = 20 + FlxG.height / 2 - tilemap.height / 2;
-		for (y in 0...tilemap.heightInTiles)
-		{
-			for (x in 0...tilemap.widthInTiles)
-			{
-
-				var tileId  = tilemap.getTile(x, y);
-				var obstacleShape = null;
-				// trace("ID :" + tilemap.getTile(x, y));
-				switch (tileId) 
-				{
-					case -1:
-					case 0:
-						//obstacleShape = ObstacleShape.BLOCK;
-					case 1:
-						//obstacleShape = ObstacleShape.BLOCK
-						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target__png, FlxG.random.int(0, 359), 0, TargetType.FIXED2, player );
-						target.body.userData.parent = target;
-						targets.add(target);
-					case 2:
-						//obstacleShape = ObstacleShape.BLOCK;
-						var target = new entities.Target(offsetw + x * 32, offseth + y * 32, AssetsImages.target2__png, FlxG.random.int(0, 359), 0, TargetType.FIXED, player );
-						target.body.userData.parent = target;
-						targets.add(target);
-						
-						
-					case 3:
-						obstacleShape = ObstacleShape.BLOCK;
-						
-						
-					default:
-						
-				}
-				
-				if (obstacleShape != null)
-				{
-					
-					var obstacle = new Obstacle(offsetw + x * 32, offseth + y * 32, EntityType.STICKY_OBSTACLE, obstacleShape);
-					obstacles.add(obstacle);
-				}
-			}
-		}
-		
-	}
 	
 	public function ActionChangeRotationDirection() {
 		// TODO: shinyser
@@ -788,6 +751,15 @@ class PlayState extends FlxState
 	//	FlxTween.tween(levelIntroSprite, {x: 900}, 4);
 		openSubState(substate);
 	}
+	
+	public function substateTriggerHandler(trigger:Bool):Void
+	{
+		if (trigger)
+		{
+			playerCanPlay = true;
+		}
+	}
+	
 }
 
 

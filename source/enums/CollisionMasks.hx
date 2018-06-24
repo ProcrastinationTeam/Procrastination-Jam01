@@ -15,5 +15,5 @@ package enums;
 	var Player  		= CollisionGroups.Bullet;
 
     // Bullets collide with the player
-	var Bullet  		= CollisionGroups.Player | CollisionGroups.Bullet;
+	var Bullet  		= CollisionGroups.Player;
 }

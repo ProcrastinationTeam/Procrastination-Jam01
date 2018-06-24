@@ -28,7 +28,7 @@ class Target extends FlxNapeSprite
 	public var cooldown 			: FlxTimer;
 	public var canShoot 			: Bool = true;
 	
-	//public var poolOfBullet			:FlxPool; 
+	//public var poolOfBullet			:FlxPool<Bullet>; 
 	
 	
 	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, InitialRotation:Float = 0, id:Int, type:TargetType, player:Player ) {
@@ -36,6 +36,9 @@ class Target extends FlxNapeSprite
 		_id = id;
 		_type = type;
 		_player = player;
+		
+		//poolOfBullet = new FlxPool<Bullet>();
+		
 		
 		loadRotatedGraphic(SimpleGraphic, 360);
 		

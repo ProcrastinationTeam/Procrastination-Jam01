@@ -23,13 +23,14 @@ class Bullet extends FlxNapeSprite
 	public function new(X:Float = 0, Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool = true, EnablePhysics:Bool = true, player: Player, type: TargetType, ?dir: String) 
 	{
 		super(X, Y, SimpleGraphic, CreateRectangularBody, EnablePhysics);
+		
 		_type = type;
 		this.createCircularBody(5, BodyType.DYNAMIC);
 		this.body.allowMovement = false;
 		this.body.allowRotation = false;
 		this.body.userData.entityType = EntityType.ENEMY_PROJECTILE;
 		this.setPosition(this.x, this.y);
-		//this.body.isBullet = true;
+		
 		
 		
 		var velocity = null;
