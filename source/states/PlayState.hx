@@ -565,19 +565,29 @@ class PlayState extends FlxState
 			
 			// METHOD 2: TRIGGER
 			
-		//	if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.pressed.RIGHT_TRIGGER)) {
-			if (FlxG.keys.justPressed.Z || (gamepad != null && gamepad.anyPressed(inputHandler.moveClockwise))) {
-				var inp = gamepad.analog.value.RIGHT_TRIGGER;
-				//trace("INPUT C : " + inp);
+			//	BIG REFACTO TO DO
+			if (FlxG.keys.pressed.D || (gamepad != null && gamepad.anyPressed(inputHandler.moveClockwise))) {
+				
+				var inp = 1.0;
+				
+				if (gamepad != null )
+				{
+					inp = gamepad.analog.value.RIGHT_TRIGGER;				
+				}
 				
 				player.clockwise = true;
 				instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
 			
 			}
 			
-			if (FlxG.keys.justPressed.S || (gamepad != null && gamepad.anyPressed(inputHandler.moveCounterClockwise))){
-				var inp = gamepad.analog.value.LEFT_TRIGGER;
-				//trace("INPUT CC : " + inp);
+			if (FlxG.keys.pressed.Q || (gamepad != null && gamepad.anyPressed(inputHandler.moveCounterClockwise))){
+				
+				var inp = 1.0;
+				
+				if (gamepad != null )
+				{
+					inp = gamepad.analog.value.LEFT_TRIGGER;	
+				}
 				
 				player.clockwise = false;
 				instantRotation = (player.dashing ? Tweaking.playerRpmBase * Tweaking.dashAcceleration : player.rpm) * (player.clockwise ? 1 : -1) * elapsed * 360 / 60;
